@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ApiTestConfig, ApiTestConfigSchema } from './ApiTest';
+import { ApiTestConfig, ApiTestConfigSchema, ApiTypeSchema } from './ApiTest';
 
 // Test status enumeration
 export const TestStatusSchema = z.enum(['running', 'completed', 'stopped', 'failed']);
@@ -100,7 +100,7 @@ export class LoadTest {
 
   // Generate unique ID for the test
   private generateId(): string {
-    return `load_test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `load_test_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   // Get test configuration

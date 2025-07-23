@@ -4,6 +4,14 @@ import { z } from 'zod';
 export const HttpMethodSchema = z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']);
 export type HttpMethod = z.infer<typeof HttpMethodSchema>;
 
+// API Types
+export const ApiTypeSchema = z.enum(['rest', 'graphql']);
+export type ApiType = z.infer<typeof ApiTypeSchema>;
+
+// GraphQL operation types
+export const GraphQLOperationTypeSchema = z.enum(['query', 'mutation', 'subscription']);
+export type GraphQLOperationType = z.infer<typeof GraphQLOperationTypeSchema>;
+
 // Authentication types
 export const AuthTypeSchema = z.enum(['bearer', 'apikey', 'basic']);
 export type AuthType = z.infer<typeof AuthTypeSchema>;
@@ -15,15 +23,31 @@ export const AuthConfigSchema = z.object({
 });
 export interface AuthConfig extends z.infer<typeof AuthConfigSchema> {}
 
+// GraphQL request schema and interface
+export const GraphQLRequestSchema = z.object({
+  operationType: GraphQLOperationTypeSchema,
+  operationName: z.string().optional(),
+  query: z.string().min(1, 'GraphQL query is required'),
+  variables: z.record(z.string(), z.any()).optional(),
+});
+export interface GraphQLRequest extends z.infer<typeof GraphQLRequestSchema> {}
+
 // API Test Configuration schema and interface
 export const ApiTestConfigSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Test name is required').max(100, 'Test name must be less than 100 characters'),
   url: z.string().url('Invalid URL format'),
+  apiType: ApiTypeSchema.default('rest'),
   method: HttpMethodSchema,
   headers: z.record(z.string(), z.string()),
   queryParams: z.record(z.string(), z.string()),
   body: z.string().optional(),
+  graphql: z.object({
+    operationType: GraphQLOperationTypeSchema.default('query'),
+    operationName: z.string().optional(),
+    query: z.string().optional(),
+    variables: z.string().optional(), // JSON string of variables
+  }).optional(),
   authentication: AuthConfigSchema.optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -44,10 +68,17 @@ export interface ApiTestResponse extends z.infer<typeof ApiTestResponseSchema> {
 // Test endpoint request schema and interface
 export const TestEndpointRequestSchema = z.object({
   url: z.string().url('Invalid URL format'),
+  apiType: ApiTypeSchema.default('rest'),
   method: HttpMethodSchema,
   headers: z.record(z.string(), z.string()),
   queryParams: z.record(z.string(), z.string()),
   body: z.string().optional(),
+  graphql: z.object({
+    operationType: GraphQLOperationTypeSchema.default('query'),
+    operationName: z.string().optional(),
+    query: z.string().optional(),
+    variables: z.string().optional(), // JSON string of variables
+  }).optional(),
   auth: AuthConfigSchema.optional(),
 });
 export interface TestEndpointRequest extends z.infer<typeof TestEndpointRequestSchema> {}
@@ -77,7 +108,7 @@ export class ApiTest {
 
   // Generate unique ID for the test
   private generateId(): string {
-    return `api_test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `api_test_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   // Get test configuration
@@ -134,12 +165,52 @@ export class ApiTest {
         }
       }
 
-      // Validate JSON body if present
-      if (this.config.body) {
-        try {
-          JSON.parse(this.config.body);
-        } catch {
-          errors.push('Request body must be valid JSON');
+      // Validate based on API type
+      if (this.config.apiType === 'rest') {
+        // Validate JSON body if present for REST APIs
+        if (this.config.body) {
+          try {
+            JSON.parse(this.config.body);
+          } catch {
+            errors.push('Request body must be valid JSON');
+          }
+        }
+      } else if (this.config.apiType === 'graphql') {
+        // Validate GraphQL configuration
+        if (!this.config.graphql) {
+          errors.push('GraphQL configuration is required for GraphQL API type');
+        } else {
+          // Validate GraphQL query
+          if (!this.config.graphql.query || !this.config.graphql.query.trim()) {
+            errors.push('GraphQL query is required');
+          } else {
+            // Basic GraphQL query validation
+            const query = this.config.graphql.query;
+            
+            // Check for balanced braces
+            let braceCount = 0;
+            for (const char of query) {
+              if (char === '{') braceCount++;
+              if (char === '}') braceCount--;
+              if (braceCount < 0) {
+                errors.push('Unbalanced braces in GraphQL query');
+                break;
+              }
+            }
+            
+            if (braceCount !== 0) {
+              errors.push('Unbalanced braces in GraphQL query');
+            }
+          }
+          
+          // Validate GraphQL variables if present
+          if (this.config.graphql.variables) {
+            try {
+              JSON.parse(this.config.graphql.variables);
+            } catch {
+              errors.push('GraphQL variables must be valid JSON');
+            }
+          }
         }
       }
 

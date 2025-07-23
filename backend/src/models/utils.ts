@@ -6,6 +6,8 @@ import {
   TestEndpointRequestSchema,
   AuthConfig,
   AuthConfigSchema,
+  GraphQLRequest,
+  GraphQLRequestSchema,
 } from './ApiTest';
 import {
   LoadTestConfig,
@@ -60,6 +62,10 @@ export function validateAuthConfig(data: unknown): ValidationResult<AuthConfig> 
   return validateData(AuthConfigSchema, data);
 }
 
+export function validateGraphQLRequest(data: unknown): ValidationResult<GraphQLRequest> {
+  return validateData(GraphQLRequestSchema, data);
+}
+
 export function validateLoadTestConfig(data: unknown): ValidationResult<LoadTestConfig> {
   return validateData(LoadTestConfigSchema, data);
 }
@@ -74,6 +80,34 @@ export function validateMetricPoint(data: unknown): ValidationResult<MetricPoint
 
 export function validateTestResults(data: unknown): ValidationResult<TestResults> {
   return validateData(TestResultsSchema, data);
+}
+
+export function validateWebSocketJoinTestEvent(data: unknown): ValidationResult<WebSocketJoinTestEvent> {
+  return validateData(WebSocketJoinTestEventSchema, data);
+}
+
+export function validateWebSocketLeaveTestEvent(data: unknown): ValidationResult<WebSocketLeaveTestEvent> {
+  return validateData(WebSocketLeaveTestEventSchema, data);
+}
+
+export function validateWebSocketTestMetricsEvent(data: unknown): ValidationResult<WebSocketTestMetricsEvent> {
+  return validateData(WebSocketTestMetricsEventSchema, data);
+}
+
+export function validateWebSocketTestCompleteEvent(data: unknown): ValidationResult<WebSocketTestCompleteEvent> {
+  return validateData(WebSocketTestCompleteEventSchema, data);
+}
+
+export function validateTestHistoryItem(data: unknown): ValidationResult<TestHistoryItem> {
+  return validateData(TestHistoryItemSchema, data);
+}
+
+export function validateTestHistoryResponse(data: unknown): ValidationResult<TestHistoryResponse> {
+  return validateData(TestHistoryResponseSchema, data);
+}
+
+export function validateExportConfig(data: unknown): ValidationResult<ExportConfig> {
+  return validateData(ExportConfigSchema, data);
 }
 
 // Data transformation utilities
@@ -172,7 +206,7 @@ export class DataTransformer {
 
   // Generate unique ID with prefix
   static generateId(prefix: string): string {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   // Calculate percentile from array of numbers
@@ -230,6 +264,64 @@ export class DataTransformer {
       };
     }
   }
+  
+  // Validate GraphQL query syntax (basic validation)
+  static validateGraphQLQuery(query: string): { isValid: boolean; error?: string } {
+    // Basic validation - check for required keywords and balanced braces
+    if (!query.trim()) {
+      return { isValid: false, error: 'GraphQL query cannot be empty' };
+    }
+
+    // Check for query or mutation keyword
+    const hasQueryKeyword = /query\s*(\w+)?\s*(\([^)]*\))?\s*\{/.test(query) || /\{\s*\w+/.test(query);
+    const hasMutationKeyword = /mutation\s*(\w+)?\s*(\([^)]*\))?\s*\{/.test(query);
+    
+    if (!hasQueryKeyword && !hasMutationKeyword) {
+      return { 
+        isValid: false, 
+        error: 'GraphQL query must start with "query" or "mutation" keyword or a selection set' 
+      };
+    }
+
+    // Check for balanced braces
+    let braceCount = 0;
+    for (const char of query) {
+      if (char === '{') braceCount++;
+      if (char === '}') braceCount--;
+      if (braceCount < 0) {
+        return { isValid: false, error: 'Unbalanced braces in GraphQL query' };
+      }
+    }
+
+    if (braceCount !== 0) {
+      return { isValid: false, error: 'Unbalanced braces in GraphQL query' };
+    }
+
+    return { isValid: true };
+  }
+
+  // Parse variables from JSON string
+  static parseGraphQLVariables(variablesStr: string): { isValid: boolean; variables?: Record<string, any>; error?: string } {
+    if (!variablesStr.trim()) {
+      return { isValid: true, variables: {} };
+    }
+
+    try {
+      const variables = JSON.parse(variablesStr);
+      if (typeof variables !== 'object' || variables === null) {
+        return { 
+          isValid: false, 
+          error: 'GraphQL variables must be a JSON object' 
+        };
+      }
+      return { isValid: true, variables };
+    } catch (error) {
+      return { 
+        isValid: false, 
+        error: error instanceof Error ? error.message : 'Invalid JSON format for GraphQL variables' 
+      };
+    }
+  }
 
   // Deep clone object
   static deepClone<T>(obj: T): T {
@@ -241,6 +333,83 @@ export class DataTransformer {
     return { ...target, ...source };
   }
 }
+
+// WebSocket event schemas for real-time communication
+export const WebSocketJoinTestEventSchema = z.object({
+  testId: z.string(),
+});
+export interface WebSocketJoinTestEvent extends z.infer<typeof WebSocketJoinTestEventSchema> {}
+
+export const WebSocketLeaveTestEventSchema = z.object({
+  testId: z.string(),
+});
+export interface WebSocketLeaveTestEvent extends z.infer<typeof WebSocketLeaveTestEventSchema> {}
+
+export const WebSocketTestMetricsEventSchema = z.object({
+  testId: z.string(),
+  timestamp: z.number().positive(),
+  requestsPerSecond: z.number().min(0),
+  averageLatency: z.number().min(0),
+  errorRate: z.number().min(0).max(1),
+  activeUsers: z.number().int().min(0),
+});
+export interface WebSocketTestMetricsEvent extends z.infer<typeof WebSocketTestMetricsEventSchema> {}
+
+export const WebSocketTestCompleteEventSchema = z.object({
+  testId: z.string(),
+  summary: z.object({
+    totalRequests: z.number().int().min(0),
+    successfulRequests: z.number().int().min(0),
+    failedRequests: z.number().int().min(0),
+    averageLatency: z.number().min(0),
+    p95Latency: z.number().min(0),
+    p99Latency: z.number().min(0),
+    maxLatency: z.number().min(0),
+    requestsPerSecond: z.number().min(0),
+    errorRate: z.number().min(0).max(1),
+  }),
+});
+export interface WebSocketTestCompleteEvent extends z.infer<typeof WebSocketTestCompleteEventSchema> {}
+
+// History and pagination schemas
+export const TestHistoryItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string(),
+  method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
+  status: z.enum(['running', 'completed', 'stopped', 'failed']),
+  createdAt: z.date(),
+  duration: z.number().optional(),
+  totalRequests: z.number().int().min(0).optional(),
+  errorRate: z.number().min(0).max(1).optional(),
+});
+export interface TestHistoryItem extends z.infer<typeof TestHistoryItemSchema> {}
+
+export const PaginationSchema = z.object({
+  page: z.number().int().min(1),
+  limit: z.number().int().min(1).max(100),
+  total: z.number().int().min(0),
+  totalPages: z.number().int().min(0),
+});
+export interface Pagination extends z.infer<typeof PaginationSchema> {}
+
+export const TestHistoryResponseSchema = z.object({
+  items: z.array(TestHistoryItemSchema),
+  pagination: PaginationSchema,
+});
+export interface TestHistoryResponse extends z.infer<typeof TestHistoryResponseSchema> {}
+
+// Data export schemas
+export const ExportConfigSchema = z.object({
+  format: z.enum(['csv', 'json']),
+  includeMetrics: z.boolean().default(true),
+  includeConfig: z.boolean().default(true),
+  dateRange: z.object({
+    start: z.date().optional(),
+    end: z.date().optional(),
+  }).optional(),
+});
+export interface ExportConfig extends z.infer<typeof ExportConfigSchema> {}
 
 // Export commonly used schemas for external validation
 export {

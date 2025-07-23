@@ -1,15 +1,44 @@
-import { ApiTest, ApiTestConfig, AuthConfig } from '../ApiTest';
-import { validateApiTestConfig, validateTestEndpointRequest, validateAuthConfig } from '../utils';
+import { ApiTest, ApiTestConfig, AuthConfig, GraphQLRequest } from '../ApiTest';
+import { validateApiTestConfig, validateTestEndpointRequest, validateAuthConfig, validateGraphQLRequest } from '../utils';
 
 describe('ApiTest Model', () => {
   const validApiTestConfig: ApiTestConfig = {
     id: 'test-1',
     name: 'Test API',
     url: 'https://api.example.com/test',
+    apiType: 'rest',
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     queryParams: { limit: '10' },
     body: '{"test": true}',
+    authentication: {
+      type: 'bearer',
+      credentials: { token: 'test-token' },
+    },
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  
+  const validGraphQLApiTestConfig: ApiTestConfig = {
+    id: 'test-graphql-1',
+    name: 'GraphQL API Test',
+    url: 'https://api.example.com/graphql',
+    apiType: 'graphql',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    queryParams: {},
+    graphql: {
+      operationType: 'query',
+      operationName: 'GetUser',
+      query: `query GetUser($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          email
+        }
+      }`,
+      variables: '{"id": "123"}'
+    },
     authentication: {
       type: 'bearer',
       credentials: { token: 'test-token' },
@@ -156,6 +185,50 @@ describe('ApiTest Model', () => {
       expect(validation.isValid).toBe(false);
       expect(validation.errors).toContain('Request body must be valid JSON');
     });
+    
+    it('should validate GraphQL API test config', () => {
+      const apiTest = new ApiTest(validGraphQLApiTestConfig);
+      const validation = apiTest.validate();
+
+      expect(validation.isValid).toBe(true);
+      expect(validation.errors).toHaveLength(0);
+    });
+
+    it('should validate missing GraphQL query', () => {
+      const invalidConfig = { 
+        ...validGraphQLApiTestConfig, 
+        graphql: { ...validGraphQLApiTestConfig.graphql!, query: '' } 
+      };
+      const apiTest = new ApiTest(invalidConfig);
+      const validation = apiTest.validate();
+
+      expect(validation.isValid).toBe(false);
+      expect(validation.errors).toContain('GraphQL query is required');
+    });
+
+    it('should validate invalid GraphQL query syntax', () => {
+      const invalidConfig = { 
+        ...validGraphQLApiTestConfig, 
+        graphql: { ...validGraphQLApiTestConfig.graphql!, query: 'query { unclosed' } 
+      };
+      const apiTest = new ApiTest(invalidConfig);
+      const validation = apiTest.validate();
+
+      expect(validation.isValid).toBe(false);
+      expect(validation.errors).toContain('Unbalanced braces in GraphQL query');
+    });
+
+    it('should validate invalid GraphQL variables', () => {
+      const invalidConfig = { 
+        ...validGraphQLApiTestConfig, 
+        graphql: { ...validGraphQLApiTestConfig.graphql!, variables: '{"invalid": json}' } 
+      };
+      const apiTest = new ApiTest(invalidConfig);
+      const validation = apiTest.validate();
+
+      expect(validation.isValid).toBe(false);
+      expect(validation.errors).toContain('GraphQL variables must be valid JSON');
+    });
 
     it('should serialize to JSON', () => {
       const apiTest = new ApiTest(validApiTestConfig);
@@ -187,6 +260,14 @@ describe('ApiTest Model', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(validApiTestConfig);
+      expect(result.errors).toBeUndefined();
+    });
+    
+    it('should validate valid GraphQL ApiTestConfig', () => {
+      const result = validateApiTestConfig(validGraphQLApiTestConfig);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(validGraphQLApiTestConfig);
       expect(result.errors).toBeUndefined();
     });
 
@@ -229,6 +310,38 @@ describe('ApiTest Model', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(authConfig);
+    });
+    
+    it('should validate GraphQLRequest', () => {
+      const graphqlRequest: GraphQLRequest = {
+        operationType: 'query',
+        operationName: 'GetUser',
+        query: `query GetUser($id: ID!) {
+          user(id: $id) {
+            id
+            name
+            email
+          }
+        }`,
+        variables: { id: '123' },
+      };
+
+      const result = validateGraphQLRequest(graphqlRequest);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(graphqlRequest);
+    });
+
+    it('should validate invalid GraphQLRequest', () => {
+      const invalidRequest = {
+        operationType: 'invalid',
+        query: '',
+      };
+
+      const result = validateGraphQLRequest(invalidRequest);
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
     });
 
     it('should validate invalid AuthConfig', () => {

@@ -50,7 +50,7 @@
    - Test properly and git commit and push to main branch
   - _Requirements: 1.3, 1.4, 7.5_
 
-- [x] 6. Implement backend API testing endpoint
+- [ ] 6. Implement backend API testing endpoint
   - Create Express.js route for single API testing (/api/test-endpoint)
   - Implement HTTP client using Axios with configurable timeouts
   - Add support for all HTTP methods (GET, POST, PUT, DELETE, PATCH)

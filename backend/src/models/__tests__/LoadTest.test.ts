@@ -7,9 +7,28 @@ describe('LoadTest Model', () => {
     id: 'api-test-1',
     name: 'Test API',
     url: 'https://api.example.com/test',
+    apiType: 'rest',
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     queryParams: { limit: '10' },
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  
+  const validGraphQLApiTestConfig: ApiTestConfig = {
+    id: 'api-test-graphql-1',
+    name: 'GraphQL Test API',
+    url: 'https://api.example.com/graphql',
+    apiType: 'graphql',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    queryParams: {},
+    graphql: {
+      operationType: 'query',
+      operationName: 'GetUsers',
+      query: `query GetUsers { users { id name } }`,
+      variables: '{}'
+    },
     createdAt: new Date(),
     updatedAt: new Date(),
   };

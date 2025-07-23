@@ -1,19 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import {
   ValidationUtils,
-  ApiTestConfig,
-  LoadTestConfig,
-  TestEndpointRequest,
-  StartLoadTestRequest,
-  AuthConfig,
-  HttpMethod,
+  type ApiTestConfig,
+  type LoadTestConfig,
+  type TestEndpointRequest,
+  type StartLoadTestRequest,
+  type AuthConfig,
+  type HttpMethod,
+  type GraphQLRequest,
 } from '../index';
+import { GraphQLValidationUtils } from '../graphql';
 
 describe('Frontend Validation Utils', () => {
   const validApiTestConfig: ApiTestConfig = {
     id: 'api-test-1',
     name: 'Test API',
     url: 'https://api.example.com/test',
+    apiType: 'rest',
     method: 'GET' as HttpMethod,
     headers: { 'Content-Type': 'application/json' },
     queryParams: { limit: '10' },
@@ -76,6 +79,7 @@ describe('Frontend Validation Utils', () => {
       it('should validate valid test endpoint request', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           queryParams: { limit: '10' },
@@ -225,6 +229,54 @@ describe('Frontend Validation Utils', () => {
       });
     });
 
+    describe('validateGraphQLRequest', () => {
+      it('should validate valid GraphQL request', () => {
+        const request: Partial<GraphQLRequest> = {
+          operationType: 'query',
+          query: `query GetUser {
+            user(id: "123") {
+              id
+              name
+              email
+            }
+          }`,
+          variables: JSON.stringify({ id: '123' }),
+        };
+
+        const result = ValidationUtils.validateGraphQLRequest(request);
+
+        expect(result.isValid).toBe(true);
+        expect(result.errors).toBeUndefined();
+      });
+
+      it('should validate invalid GraphQL query', () => {
+        const request: Partial<GraphQLRequest> = {
+          operationType: 'query',
+          query: '', // Empty query
+        };
+
+        const result = ValidationUtils.validateGraphQLRequest(request);
+
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toBeDefined();
+        expect(result.errors!.includes('GraphQL query is required')).toBe(true);
+      });
+
+      it('should validate invalid GraphQL variables', () => {
+        const request: Partial<GraphQLRequest> = {
+          operationType: 'query',
+          query: `query GetUser { user(id: "123") { id name } }`,
+          variables: '{ invalid json }',
+        };
+
+        const result = ValidationUtils.validateGraphQLRequest(request);
+
+        expect(result.isValid).toBe(false);
+        expect(result.errors).toBeDefined();
+        expect(result.errors!.includes('GraphQL variables must be valid JSON')).toBe(true);
+      });
+    });
+
     describe('sanitizeAuthConfig', () => {
       it('should sanitize bearer token', () => {
         const auth: AuthConfig = {
@@ -316,6 +368,231 @@ describe('Frontend Validation Utils', () => {
       const config = { ...validApiTestConfig, authentication: invalidAuth as any };
       const result = ValidationUtils.validateApiTestConfig(config);
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('WebSocket Event Validation', () => {
+    it('should validate WebSocket join test event', () => {
+      const event = { testId: 'test-123' };
+      const result = ValidationUtils.validateWebSocketJoinTestEvent(event);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(event);
+    });
+
+    it('should validate WebSocket test metrics event', () => {
+      const event = {
+        testId: 'test-123',
+        timestamp: Date.now(),
+        requestsPerSecond: 100,
+        averageLatency: 50,
+        errorRate: 0.01,
+        activeUsers: 10,
+      };
+      const result = ValidationUtils.validateWebSocketTestMetricsEvent(event);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(event);
+    });
+
+    it('should validate invalid WebSocket test metrics event', () => {
+      const event = {
+        testId: 'test-123',
+        timestamp: -1, // Invalid: negative timestamp
+        requestsPerSecond: 100,
+        averageLatency: 50,
+        errorRate: 0.01,
+        activeUsers: 10,
+      };
+      const result = ValidationUtils.validateWebSocketTestMetricsEvent(event);
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+    });
+  });
+
+  describe('History and Export Validation', () => {
+    it('should validate test history item', () => {
+      const historyItem = {
+        id: 'test-123',
+        name: 'Test API',
+        url: 'https://api.example.com',
+        method: 'GET' as HttpMethod,
+        status: 'completed' as const,
+        createdAt: new Date(),
+        duration: 60,
+        totalRequests: 1000,
+        errorRate: 0.01,
+      };
+      const result = ValidationUtils.validateTestHistoryItem(historyItem);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(historyItem);
+    });
+
+    it('should validate export config', () => {
+      const exportConfig = {
+        format: 'csv' as const,
+        includeMetrics: true,
+        includeConfig: false,
+        dateRange: {
+          start: new Date('2023-01-01'),
+          end: new Date('2023-12-31'),
+        },
+      };
+      const result = ValidationUtils.validateExportConfig(exportConfig);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(exportConfig);
+    });
+
+    it('should validate test history response', () => {
+      const response = {
+        items: [
+          {
+            id: 'test-123',
+            name: 'Test API',
+            url: 'https://api.example.com',
+            method: 'GET' as HttpMethod,
+            status: 'completed' as const,
+            createdAt: new Date(),
+            duration: 60,
+            totalRequests: 1000,
+            errorRate: 0.01,
+          },
+        ],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 1,
+          totalPages: 1,
+        },
+      };
+      const result = ValidationUtils.validateTestHistoryResponse(response);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(response);
+    });
+  });
+});
+
+describe('GraphQL Validation Utils', () => {
+  describe('validateGraphQLQuery', () => {
+    it('should validate valid GraphQL queries', () => {
+      const validQueries = [
+        `query GetUser { user(id: "123") { id name email } }`,
+        `{ user(id: "123") { id name email } }`, // Shorthand syntax
+        `mutation CreateUser($name: String!, $email: String!) { 
+          createUser(name: $name, email: $email) { id name email } 
+        }`,
+      ];
+
+      validQueries.forEach(query => {
+        const result = GraphQLValidationUtils.validateGraphQLQuery(query);
+        expect(result.isValid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+    });
+
+    it('should validate invalid GraphQL queries', () => {
+      const invalidQueries = [
+        '', // Empty query
+        'not a graphql query',
+        '{ unclosed query',
+        'query { extra }}}', // Unbalanced braces
+      ];
+
+      invalidQueries.forEach(query => {
+        const result = GraphQLValidationUtils.validateGraphQLQuery(query);
+        expect(result.isValid).toBe(false);
+        expect(result.error).toBeDefined();
+      });
+    });
+  });
+
+  describe('parseGraphQLVariables', () => {
+    it('should parse valid GraphQL variables', () => {
+      const validVariables = [
+        '{"id": "123"}',
+        '{"user": {"name": "John", "age": 30}}',
+        '{}', // Empty object
+        '', // Empty string (defaults to empty object)
+      ];
+
+      validVariables.forEach(vars => {
+        const result = GraphQLValidationUtils.parseGraphQLVariables(vars);
+        expect(result.isValid).toBe(true);
+        expect(result.variables).toBeDefined();
+        expect(result.error).toBeUndefined();
+      });
+    });
+
+    it('should validate invalid GraphQL variables', () => {
+      const invalidVariables = [
+        '{"invalid": json}',
+        'not json',
+        '[]', // Array instead of object
+        'null', // Null instead of object
+      ];
+
+      invalidVariables.forEach(vars => {
+        const result = GraphQLValidationUtils.parseGraphQLVariables(vars);
+        if (vars === '[]' || vars === 'null') {
+          expect(result.isValid).toBe(false);
+          expect(result.error).toBe('GraphQL variables must be a JSON object');
+        } else {
+          expect(result.isValid).toBe(false);
+          expect(result.error).toBeDefined();
+        }
+      });
+    });
+  });
+
+  describe('detectOperationType', () => {
+    it('should detect query operation type', () => {
+      const queries = [
+        'query GetUser { user { id } }',
+        '{ user { id } }', // Shorthand syntax
+        '  query   GetUser   {   user   {   id   }   }  ', // With extra spaces
+      ];
+
+      queries.forEach(query => {
+        expect(GraphQLValidationUtils.detectOperationType(query)).toBe('query');
+      });
+    });
+
+    it('should detect mutation operation type', () => {
+      const mutations = [
+        'mutation CreateUser { createUser(name: "John") { id } }',
+        '  mutation   CreateUser   {   createUser(name: "John")   {   id   }   }  ', // With extra spaces
+      ];
+
+      mutations.forEach(query => {
+        expect(GraphQLValidationUtils.detectOperationType(query)).toBe('mutation');
+      });
+    });
+
+    it('should detect subscription operation type', () => {
+      const subscriptions = [
+        'subscription UserUpdates { userUpdated { id } }',
+      ];
+
+      subscriptions.forEach(query => {
+        expect(GraphQLValidationUtils.detectOperationType(query)).toBe('subscription');
+      });
+    });
+  });
+
+  describe('extractOperationName', () => {
+    it('should extract operation name from query', () => {
+      expect(GraphQLValidationUtils.extractOperationName('query GetUser { user { id } }')).toBe('GetUser');
+      expect(GraphQLValidationUtils.extractOperationName('mutation CreateUser { createUser { id } }')).toBe('CreateUser');
+      expect(GraphQLValidationUtils.extractOperationName('subscription UserUpdates { userUpdated { id } }')).toBe('UserUpdates');
+    });
+
+    it('should return undefined for queries without operation name', () => {
+      expect(GraphQLValidationUtils.extractOperationName('query { user { id } }')).toBeUndefined();
+      expect(GraphQLValidationUtils.extractOperationName('{ user { id } }')).toBeUndefined();
     });
   });
 });

@@ -275,6 +275,57 @@ describe('Data Model Utils', () => {
           error: expect.any(String),
         });
       });
+      
+      it('should validate GraphQL queries', () => {
+        const validQueries = [
+          `query GetUser { user(id: "123") { id name email } }`,
+          `{ user(id: "123") { id name email } }`, // Shorthand syntax
+          `mutation CreateUser($name: String!, $email: String!) { 
+            createUser(name: $name, email: $email) { id name email } 
+          }`,
+        ];
+
+        validQueries.forEach(query => {
+          const result = DataTransformer.validateGraphQLQuery(query);
+          expect(result.isValid).toBe(true);
+          expect(result.error).toBeUndefined();
+        });
+
+        const invalidQueries = [
+          '', // Empty query
+          'not a graphql query',
+          '{ unclosed query',
+          'query { extra }}}', // Unbalanced braces
+        ];
+
+        invalidQueries.forEach(query => {
+          const result = DataTransformer.validateGraphQLQuery(query);
+          expect(result.isValid).toBe(false);
+          expect(result.error).toBeDefined();
+        });
+      });
+
+      it('should parse GraphQL variables', () => {
+        expect(DataTransformer.parseGraphQLVariables('{"id": "123"}')).toEqual({
+          isValid: true,
+          variables: { id: '123' },
+        });
+        
+        expect(DataTransformer.parseGraphQLVariables('')).toEqual({
+          isValid: true,
+          variables: {},
+        });
+        
+        expect(DataTransformer.parseGraphQLVariables('{"invalid": json}')).toEqual({
+          isValid: false,
+          error: expect.any(String),
+        });
+        
+        expect(DataTransformer.parseGraphQLVariables('[]')).toEqual({
+          isValid: false,
+          error: 'GraphQL variables must be a JSON object',
+        });
+      });
 
       it('should deep clone objects', () => {
         const original = { a: 1, b: { c: 2 } };
@@ -292,6 +343,118 @@ describe('Data Model Utils', () => {
 
         expect(merged).toEqual({ a: 1, b: 3, c: 4 });
         expect(merged).not.toBe(target);
+      });
+    });
+
+    describe('WebSocket Event Validation', () => {
+      it('should validate WebSocket join test event', () => {
+        const event = { testId: 'test-123' };
+        const result = validateData(z.object({ testId: z.string() }), event);
+
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual(event);
+      });
+
+      it('should validate WebSocket test metrics event', () => {
+        const event = {
+          testId: 'test-123',
+          timestamp: Date.now(),
+          requestsPerSecond: 100,
+          averageLatency: 50,
+          errorRate: 0.01,
+          activeUsers: 10,
+        };
+        const schema = z.object({
+          testId: z.string(),
+          timestamp: z.number().positive(),
+          requestsPerSecond: z.number().min(0),
+          averageLatency: z.number().min(0),
+          errorRate: z.number().min(0).max(1),
+          activeUsers: z.number().int().min(0),
+        });
+        const result = validateData(schema, event);
+
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual(event);
+      });
+
+      it('should validate invalid WebSocket test metrics event', () => {
+        const event = {
+          testId: 'test-123',
+          timestamp: -1, // Invalid: negative timestamp
+          requestsPerSecond: 100,
+          averageLatency: 50,
+          errorRate: 0.01,
+          activeUsers: 10,
+        };
+        const schema = z.object({
+          testId: z.string(),
+          timestamp: z.number().positive(),
+          requestsPerSecond: z.number().min(0),
+          averageLatency: z.number().min(0),
+          errorRate: z.number().min(0).max(1),
+          activeUsers: z.number().int().min(0),
+        });
+        const result = validateData(schema, event);
+
+        expect(result.success).toBe(false);
+        expect(result.errors).toBeDefined();
+      });
+    });
+
+    describe('History and Export Validation', () => {
+      it('should validate test history item', () => {
+        const historyItem = {
+          id: 'test-123',
+          name: 'Test API',
+          url: 'https://api.example.com',
+          method: 'GET',
+          status: 'completed',
+          createdAt: new Date(),
+          duration: 60,
+          totalRequests: 1000,
+          errorRate: 0.01,
+        };
+        const schema = z.object({
+          id: z.string(),
+          name: z.string(),
+          url: z.string(),
+          method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
+          status: z.enum(['running', 'completed', 'stopped', 'failed']),
+          createdAt: z.date(),
+          duration: z.number().optional(),
+          totalRequests: z.number().int().min(0).optional(),
+          errorRate: z.number().min(0).max(1).optional(),
+        });
+        const result = validateData(schema, historyItem);
+
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual(historyItem);
+      });
+
+      it('should validate export config', () => {
+        const exportConfig = {
+          format: 'csv',
+          includeMetrics: true,
+          includeConfig: false,
+          dateRange: {
+            start: new Date('2023-01-01'),
+            end: new Date('2023-12-31'),
+          },
+        };
+        const schema = z.object({
+          format: z.enum(['csv', 'json']),
+          includeMetrics: z.boolean().default(true),
+          includeConfig: z.boolean().default(true),
+          dateRange: z.object({
+            start: z.date().optional(),
+            end: z.date().optional(),
+          }).optional(),
+        });
+        const result = validateData(schema, exportConfig);
+
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual(exportConfig);
       });
     });
   });
