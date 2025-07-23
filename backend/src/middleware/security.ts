@@ -60,7 +60,7 @@ export const rateLimit = (options: {
 
 // Request size limiter
 export const requestSizeLimit = (maxSize: number) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     const contentLength = parseInt(req.get('content-length') || '0');
     
     if (contentLength > maxSize) {
