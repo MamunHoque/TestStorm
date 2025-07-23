@@ -72,7 +72,7 @@ export const requestSizeLimit = (maxSize: number) => {
 };
 
 // Security headers middleware
-export const securityHeaders = (req: Request, res: Response, next: NextFunction) => {
+export const securityHeaders = (_req: Request, res: Response, next: NextFunction) => {
   // Remove server information
   res.removeHeader('X-Powered-By');
   
@@ -89,7 +89,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
 };
 
 // API key validation (for future use)
-export const validateApiKey = (req: Request, res: Response, next: NextFunction) => {
+export const validateApiKey = (req: Request, _res: Response, next: NextFunction) => {
   const apiKey = req.get('X-API-Key') || req.get('Authorization')?.replace('Bearer ', '');
   
   if (!apiKey) {
@@ -116,11 +116,11 @@ export const handleCorsPreflightOptions = (req: Request, res: Response, next: Ne
     });
     return res.status(204).end();
   }
-  next();
+  return next();
 };
 
 // Input sanitization
-export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
+export const sanitizeInput = (req: Request, _res: Response, next: NextFunction) => {
   // Basic XSS protection - remove script tags and dangerous attributes
   const sanitizeString = (str: string): string => {
     return str
