@@ -54,9 +54,13 @@ export function ApiTestForm({ onSubmit, isLoading }: ApiTestFormProps) {
   const authType = watch('authentication.type');
   const method = watch('method');
 
-  // Update store when form values change
+  // Update store when form values change (debounced to prevent infinite loops)
   useEffect(() => {
-    setCurrentApiTest(watchedValues);
+    const timeoutId = setTimeout(() => {
+      setCurrentApiTest(watchedValues);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [watchedValues, setCurrentApiTest]);
 
   const onFormSubmit = (data: ApiTestFormData) => {
