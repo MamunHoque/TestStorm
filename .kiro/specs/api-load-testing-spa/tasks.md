@@ -107,7 +107,7 @@
   - Create status indicator (green/red dot) for test running state
   - _Requirements: 3.2, 3.5, 9.1, 9.3, 9.4, 9.5_
 
-- [ ] 16. Build live logs panel with efficient rendering
+- [*] 16. Build live logs panel with efficient rendering
   - Create collapsible logs panel at bottom of dashboard
   - Implement scrollable log display with monospace font and color coding
   - Add auto-scroll functionality for new entries with manual scroll override

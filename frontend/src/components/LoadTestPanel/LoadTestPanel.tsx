@@ -3,6 +3,7 @@ import { Play, Square, RotateCcw, Code, Monitor, Zap, Settings } from 'lucide-re
 import { LoadTestForm } from './LoadTestForm';
 import { PerformanceCharts } from './PerformanceCharts';
 import { LiveMetricsDashboard } from './LiveMetricsDashboard';
+import { LiveLogsPanel } from './LiveLogsPanel';
 import { LoadTestConfig } from '../../types/loadTest';
 import { useLoadTestState } from '../../store';
 import { useLoadTestWebSocket } from '../../hooks/useLoadTestWebSocket';
@@ -240,24 +241,15 @@ export function LoadTestPanel() {
             isRunning={isRunning}
           />
 
-          {/* Error Logs */}
-          {errorLogs.length > 0 && (
-            <div className="glass-panel">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recent Errors
-              </h3>
-              <div className="max-h-32 overflow-y-auto space-y-2">
-                {errorLogs.slice(-5).map((log, index) => (
-                  <div key={index} className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                    <span className="font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                    <span className="ml-2">{log.message}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Live Logs Panel - Full Width at Bottom */}
+      <LiveLogsPanel
+        logs={logs}
+        isRunning={isRunning}
+        className="mt-6"
+      />
     </div>
   );
 }
