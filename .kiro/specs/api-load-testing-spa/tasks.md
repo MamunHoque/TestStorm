@@ -26,7 +26,7 @@
   - Configure environment variables and logging
   - _Requirements: 6.2, 6.3, 6.5_
 
-- [ ] 5. Implement single API endpoint testing functionality
+- [*] 5. Implement single API endpoint testing functionality
   - Create API test service that handles HTTP requests with various methods
   - Build request builder with support for headers, query parameters, and request body
   - Implement authentication handling for Bearer token, API key, and Basic auth
