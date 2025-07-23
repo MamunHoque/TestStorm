@@ -6,3 +6,4 @@ export * from './AnimatedButton';
 export * from './LoadingSkeleton';
 export * from './AnimatedContainer';
 export * from './ExportButton';
+export * from './ResponsiveLayout';
