@@ -15,6 +15,7 @@ import {
 } from './middleware/security';
 import { apiRoutes } from './routes';
 import { initializeDatabase } from './models/database';
+import { initializeWebSocketService } from './services/WebSocketService';
 
 // Load environment variables
 dotenv.config();
@@ -95,14 +96,8 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api', apiRoutes);
 
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-  logger.info(`Client connected: ${socket.id}`);
-  
-  socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
-  });
-});
+// Initialize WebSocket service
+const wsService = initializeWebSocketService(server);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

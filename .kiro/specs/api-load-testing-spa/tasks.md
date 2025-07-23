@@ -49,7 +49,7 @@
   - Integrate with backend API test endpoint
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 8. Implement WebSocket infrastructure for real-time communication
+- [*] 8. Implement WebSocket infrastructure for real-time communication
   - Set up Socket.IO server with event handlers for load testing
   - Create WebSocket client integration in React frontend
   - Implement connection management and reconnection logic

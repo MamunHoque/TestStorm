@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { apiTestRoutes } from './apiTest';
 import { loadTestRoutes } from './loadTest';
 import { resultsRoutes } from './results';
+import { websocketRoutes } from './websocket';
 import { healthCheck, readinessCheck, livenessCheck } from '../controllers/healthController';
 import { validatePagination, validateUUID } from '../middleware/validation';
 
@@ -36,5 +37,6 @@ router.get('/info', (req, res) => {
 router.use(`${API_VERSION}/api-test`, apiTestRoutes);
 router.use(`${API_VERSION}/load-test`, loadTestRoutes);
 router.use(`${API_VERSION}/results`, resultsRoutes);
+router.use(`${API_VERSION}/websocket`, websocketRoutes);
 
 export { router as apiRoutes };
