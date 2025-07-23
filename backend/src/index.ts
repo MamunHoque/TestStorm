@@ -97,7 +97,8 @@ app.get('/health', (req, res) => {
 app.use('/api', apiRoutes);
 
 // Initialize WebSocket service
-const wsService = initializeWebSocketService(server);
+// Initialize WebSocket service for real-time communication
+initializeWebSocketService(server);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
