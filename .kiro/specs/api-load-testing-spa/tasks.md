@@ -10,7 +10,7 @@
   - Test properly and git commit and push to main branch 
   - _Requirements: 5.1, 5.3_
 
-- [-] 2. Implement core data models and TypeScript interfaces
+- [x] 2. Implement core data models and TypeScript interfaces
   - Create TypeScript interfaces for ApiTestConfig, LoadTestConfig, TestResults
   - Define authentication configuration types (Bearer, API Key, Basic Auth)
   - Implement data validation schemas using Zod or similar library
@@ -19,7 +19,7 @@
    - Test properly and git commit and push to main branch
   - _Requirements: 1.1, 1.2, 6.1, 7.1, 7.2_
 
- - [ ] 3. Build basic SPA shell and navigation
+ - [-] 3. Build basic SPA shell and navigation
   - Create main App component with routing logic
   - Implement tab-based navigation between API Test, Load Test, Dashboard, and History panels
   - Add dark/light theme toggle functionality with context provider

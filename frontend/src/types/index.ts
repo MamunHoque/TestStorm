@@ -3,9 +3,9 @@ import {
   GraphQLOperationTypeSchema, 
   GraphQLRequestSchema, 
   GraphQLResponseSchema,
-  GraphQLRequest,
-  GraphQLResponse,
-  GraphQLOperationType,
+  type GraphQLRequest,
+  type GraphQLResponse,
+  type GraphQLOperationType,
   GraphQLValidationUtils
 } from './graphql';
 
@@ -33,6 +33,8 @@ export {
   GraphQLOperationTypeSchema,
   GraphQLRequestSchema,
   GraphQLResponseSchema,
+};
+export type {
   GraphQLRequest,
   GraphQLResponse,
   GraphQLOperationType
@@ -318,7 +320,7 @@ export class ValidationUtils {
     
     return {
       isValid: errors.length === 0,
-      errors: errors.length > 0 ? errors : undefined
+      ...(errors.length > 0 && { errors })
     };
   }
 

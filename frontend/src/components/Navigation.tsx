@@ -1,4 +1,4 @@
-import { AppPanel } from '../types/ui'
+import type { AppPanel } from '../types/ui'
 import { useTheme } from '../contexts/ThemeContext'
 
 interface NavigationProps {
