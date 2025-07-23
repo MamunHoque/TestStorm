@@ -7,7 +7,7 @@ import { LiveLogsPanel } from './LiveLogsPanel';
 import { LoadTestConfig } from '../../types/loadTest';
 import { useLoadTestState } from '../../store';
 import { useLoadTestWebSocket } from '../../hooks/useLoadTestWebSocket';
-import { loadTestService } from '../../services';
+import { LoadTestService } from '../../services';
 
 interface MetricsDataPoint {
   timestamp: number;
@@ -56,7 +56,7 @@ export function LoadTestPanel() {
       setIsLoading(true);
       
       // Start the load test
-      const response = await loadTestService.startLoadTest(config);
+      const response = await LoadTestService.startLoadTest(config);
       const testId = response.testId;
       
       // Update state
@@ -87,7 +87,7 @@ export function LoadTestPanel() {
     
     try {
       setIsLoading(true);
-      await loadTestService.stopLoadTest(currentTestId);
+      await LoadTestService.stopLoadTest(currentTestId);
       setIsRunning(false);
     } catch (error) {
       console.error('Failed to stop load test:', error);

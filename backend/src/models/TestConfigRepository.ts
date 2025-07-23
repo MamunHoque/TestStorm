@@ -84,7 +84,13 @@ export class TestConfigRepository extends BaseRepository<TestConfig> {
     }
 
     const whereClause = conditions.length > 0 ? conditions.join(' AND ') : '1=1';
-    return this.findWhere(whereClause, params, options);
+    const defaultOptions = {
+      page: options?.page || 1,
+      limit: options?.limit || 25,
+      sortBy: options?.sortBy || 'created_at',
+      sortOrder: options?.sortOrder || 'DESC' as const
+    };
+    return this.findWhere(whereClause, params, defaultOptions);
   }
 
   // Find by name

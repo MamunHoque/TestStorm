@@ -3,7 +3,8 @@ import { spawn, ChildProcess } from 'child_process';
 import { writeFileSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { LoadTestConfig, LoadTestExecution } from '../types/loadTest';
+import * as yaml from 'js-yaml';
+import { LoadTestConfig } from '../types/loadTest';
 import { getWebSocketService } from './WebSocketService';
 import { logger } from '../utils/logger';
 
@@ -28,7 +29,7 @@ export class LoadTestService {
   async startLoadTest(
     config: LoadTestConfig,
     options: LoadTestOptions = {}
-  ): Promise<{ testId: string; execution: LoadTestExecution }> {
+  ): Promise<{ testId: string; execution: any }> {
     const testId = uuidv4();
     const { outputDir = './temp', keepArtifacts = false } = options;
 
@@ -52,15 +53,13 @@ export class LoadTestService {
       writeFileSync(configPath, artilleryConfig);
 
       // Create test execution record
-      const execution: LoadTestExecution = {
+      const execution = {
         id: testId,
         name: config.name || `Load Test ${testId}`,
-        type: 'load',
-        status: 'running',
+        type: 'load' as const,
+        status: 'running' as const,
         config_data: config,
         started_at: new Date(),
-        created_at: new Date(),
-        updated_at: new Date(),
         metrics: {
           summary: {
             totalRequests: 0,
@@ -227,7 +226,7 @@ export class LoadTestService {
   }
 
   // Create Artillery configuration YAML
-  private createArtilleryConfig(config: LoadTestConfig, testId: string): string {
+  private createArtilleryConfig(config: LoadTestConfig, _testId: string): string {
     const { target, load, authentication, options } = config;
 
     // Build Artillery config object
@@ -277,7 +276,12 @@ export class LoadTestService {
     }
 
     // Convert to YAML
-    return this.objectToYaml(artilleryConfig);
+    return yaml.dump(artilleryConfig, {
+      indent: 2,
+      lineWidth: -1,
+      noRefs: true,
+      sortKeys: false
+    });
   }
 
   // Parse request body
@@ -305,34 +309,7 @@ export class LoadTestService {
     }
   }
 
-  // Convert object to YAML string
-  private objectToYaml(obj: any, indent: number = 0): string {
-    const spaces = '  '.repeat(indent);
-    let yaml = '';
 
-    for (const [key, value] of Object.entries(obj)) {
-      if (value === null || value === undefined) {
-        yaml += `${spaces}${key}: null\n`;
-      } else if (typeof value === 'object' && !Array.isArray(value)) {
-        yaml += `${spaces}${key}:\n`;
-        yaml += this.objectToYaml(value, indent + 1);
-      } else if (Array.isArray(value)) {
-        yaml += `${spaces}${key}:\n`;
-        value.forEach((item) => {
-          if (typeof item === 'object') {
-            yaml += `${spaces}- \n`;
-            yaml += this.objectToYaml(item, indent + 1).replace(/^/gm, '  ');
-          } else {
-            yaml += `${spaces}- ${item}\n`;
-          }
-        });
-      } else {
-        yaml += `${spaces}${key}: ${value}\n`;
-      }
-    }
-
-    return yaml;
-  }
 
   // Spawn Artillery process
   private spawnArtilleryProcess(configPath: string, testId: string, outputDir: string): ChildProcess {
@@ -344,12 +321,12 @@ export class LoadTestService {
       configPath,
     ];
 
-    const process = spawn('npx', ['artillery', ...args], {
+    const childProcess = spawn('npx', ['artillery', ...args], {
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, NODE_ENV: 'production' },
     });
 
-    return process;
+    return childProcess;
   }
 
   // Set up process event handlers

@@ -8,7 +8,7 @@ import {
 import { AppError } from './errorHandler';
 
 // Middleware to validate API test configuration
-export const validateApiTestRequest = (req: Request, res: Response, next: NextFunction) => {
+export const validateApiTestRequest = (req: Request, _res: Response, next: NextFunction) => {
   try {
     const validatedConfig = validateApiTestConfig(req.body);
     req.body = validatedConfig; // Replace with validated data
@@ -26,7 +26,7 @@ export const validateApiTestRequest = (req: Request, res: Response, next: NextFu
 };
 
 // Middleware to validate load test configuration
-export const validateLoadTestRequest = (req: Request, res: Response, next: NextFunction) => {
+export const validateLoadTestRequest = (req: Request, _res: Response, next: NextFunction) => {
   try {
     const validatedConfig = validateLoadTestConfig(req.body);
     req.body = validatedConfig; // Replace with validated data
@@ -45,7 +45,7 @@ export const validateLoadTestRequest = (req: Request, res: Response, next: NextF
 
 // Generic validation middleware factory
 export const validateSchema = (validator: (data: unknown) => any) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     try {
       const validatedData = validator(req.body);
       req.body = validatedData;
@@ -64,7 +64,7 @@ export const validateSchema = (validator: (data: unknown) => any) => {
 };
 
 // Validate pagination parameters
-export const validatePagination = (req: Request, res: Response, next: NextFunction) => {
+export const validatePagination = (req: Request, _res: Response, next: NextFunction) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 25;
   const sortBy = req.query.sortBy as string || 'created_at';
@@ -99,7 +99,7 @@ export const validatePagination = (req: Request, res: Response, next: NextFuncti
 
 // Validate UUID parameter
 export const validateUUID = (paramName: string) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     const uuid = req.params[paramName];
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     

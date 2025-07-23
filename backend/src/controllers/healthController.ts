@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { getDatabase } from '../models/database';
 import { logger } from '../utils/logger';
 
-export const healthCheck = async (req: Request, res: Response) => {
+export const healthCheck = async (_req: Request, res: Response) => {
   try {
     const db = getDatabase();
     const dbHealthy = await db.healthCheck();
@@ -46,7 +46,7 @@ export const healthCheck = async (req: Request, res: Response) => {
   }
 };
 
-export const readinessCheck = async (req: Request, res: Response) => {
+export const readinessCheck = async (_req: Request, res: Response) => {
   try {
     const db = getDatabase();
     const dbHealthy = await db.healthCheck();
@@ -59,14 +59,14 @@ export const readinessCheck = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       status: 'READY',
       timestamp: new Date().toISOString(),
       message: 'Service is ready to accept requests',
     });
   } catch (error) {
     logger.error('Readiness check failed:', error);
-    res.status(503).json({
+    return res.status(503).json({
       status: 'NOT_READY',
       message: 'Service not ready',
       timestamp: new Date().toISOString(),
@@ -74,7 +74,7 @@ export const readinessCheck = async (req: Request, res: Response) => {
   }
 };
 
-export const livenessCheck = (req: Request, res: Response) => {
+export const livenessCheck = (_req: Request, res: Response) => {
   res.json({
     status: 'ALIVE',
     timestamp: new Date().toISOString(),

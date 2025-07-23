@@ -57,7 +57,7 @@ export function LiveLogsPanel({ logs, isRunning, className = '' }: LiveLogsPanel
 
   // Format log entry for display
   const formatLogEntry = (log: LogEntry): string => {
-    const timestamp = log.timestamp.toLocaleTimeString();
+    const timestamp = new Date(log.timestamp).toLocaleTimeString();
     const method = log.method || '';
     const url = log.url || '';
     const status = log.statusCode ? ` – ${log.statusCode}` : '';

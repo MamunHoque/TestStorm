@@ -1,5 +1,5 @@
 // WebSocket management routes
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { getWebSocketService } from '../services/WebSocketService';
 import { logger } from '../utils/logger';
@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // Get WebSocket connection statistics
-router.get('/stats', asyncHandler(async (req, res) => {
+router.get('/stats', asyncHandler(async (_req: Request, res: Response) => {
   try {
     const wsService = getWebSocketService();
     const stats = wsService.getConnectionStats();
@@ -29,7 +29,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
 }));
 
 // Send test metrics update (for testing purposes)
-router.post('/test-metrics', asyncHandler(async (req, res) => {
+router.post('/test-metrics', asyncHandler(async (req: Request, res: Response) => {
   try {
     const wsService = getWebSocketService();
     const { testId, metrics } = req.body;
@@ -47,15 +47,15 @@ router.post('/test-metrics', asyncHandler(async (req, res) => {
       timestamp: new Date(),
       ...metrics,
     });
-    
-    res.json({
+
+    return res.json({
       success: true,
       message: 'Metrics update broadcasted',
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error('Failed to broadcast test metrics:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to broadcast metrics',
       message: error.message,
@@ -65,7 +65,7 @@ router.post('/test-metrics', asyncHandler(async (req, res) => {
 }));
 
 // Send test status update (for testing purposes)
-router.post('/test-status', asyncHandler(async (req, res) => {
+router.post('/test-status', asyncHandler(async (req: Request, res: Response) => {
   try {
     const wsService = getWebSocketService();
     const { testId, status, message, error } = req.body;
@@ -85,15 +85,15 @@ router.post('/test-status', asyncHandler(async (req, res) => {
       error,
       timestamp: new Date(),
     });
-    
-    res.json({
+
+    return res.json({
       success: true,
       message: 'Status update broadcasted',
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error('Failed to broadcast test status:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to broadcast status',
       message: error.message,
@@ -103,7 +103,7 @@ router.post('/test-status', asyncHandler(async (req, res) => {
 }));
 
 // Send log entry (for testing purposes)
-router.post('/test-log', asyncHandler(async (req, res) => {
+router.post('/test-log', asyncHandler(async (req: Request, res: Response) => {
   try {
     const wsService = getWebSocketService();
     const { testId, level, message, method, url, statusCode, responseTime, userId } = req.body;
@@ -127,15 +127,15 @@ router.post('/test-log', asyncHandler(async (req, res) => {
       responseTime,
       userId,
     });
-    
-    res.json({
+
+    return res.json({
       success: true,
       message: 'Log entry broadcasted',
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error('Failed to broadcast log entry:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to broadcast log',
       message: error.message,
@@ -145,7 +145,7 @@ router.post('/test-log', asyncHandler(async (req, res) => {
 }));
 
 // Broadcast message to all clients
-router.post('/broadcast', asyncHandler(async (req, res) => {
+router.post('/broadcast', asyncHandler(async (req: Request, res: Response) => {
   try {
     const wsService = getWebSocketService();
     const { event, data } = req.body;
@@ -162,15 +162,15 @@ router.post('/broadcast', asyncHandler(async (req, res) => {
       ...data,
       timestamp: new Date().toISOString(),
     });
-    
-    res.json({
+
+    return res.json({
       success: true,
       message: 'Message broadcasted to all clients',
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
     logger.error('Failed to broadcast message:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to broadcast message',
       message: error.message,

@@ -14,6 +14,7 @@ export interface TestLog {
   response_time?: number;
   user_id?: string; // virtual user ID for load tests
   created_at: Date;
+  updated_at: Date;
 }
 
 export interface TestLogFilter {
@@ -46,6 +47,7 @@ export class TestLogRepository extends BaseRepository<TestLog> {
       response_time: row.response_time,
       user_id: row.user_id,
       created_at: new Date(row.created_at),
+      updated_at: new Date(row.updated_at),
     };
   }
 
@@ -107,7 +109,12 @@ export class TestLogRepository extends BaseRepository<TestLog> {
     }
 
     const whereClause = conditions.length > 0 ? conditions.join(' AND ') : '1=1';
-    const defaultOptions = { sortBy: 'timestamp', sortOrder: 'ASC' as const, ...options };
+    const defaultOptions = {
+      page: options?.page || 1,
+      limit: options?.limit || 25,
+      sortBy: 'timestamp',
+      sortOrder: 'ASC' as const
+    };
     return this.findWhere(whereClause, params, defaultOptions);
   }
 

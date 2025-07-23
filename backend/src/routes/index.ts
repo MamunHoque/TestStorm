@@ -4,7 +4,7 @@ import { loadTestRoutes } from './loadTest';
 import { resultsRoutes } from './results';
 import { websocketRoutes } from './websocket';
 import { healthCheck, readinessCheck, livenessCheck } from '../controllers/healthController';
-import { validatePagination, validateUUID } from '../middleware/validation';
+
 
 const router = Router();
 
@@ -17,7 +17,7 @@ router.get('/health/ready', readinessCheck);
 router.get('/health/live', livenessCheck);
 
 // API info endpoint
-router.get('/info', (req, res) => {
+router.get('/info', (_req, res) => {
   res.json({
     name: 'API Load Testing & Monitoring API',
     version: '1.0.0',

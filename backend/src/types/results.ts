@@ -1,7 +1,7 @@
 // Test results and reporting types
 import { BaseEntity, ExportFormat } from './common';
-import { LoadTestMetrics, LoadTestConfig } from './loadTest';
-import { ApiTestResult } from './api';
+// import { LoadTestMetrics, LoadTestConfig } from './loadTest';
+// import { ApiTestResult } from './api';
 
 export interface TestResult extends BaseEntity {
   type: 'api' | 'load';

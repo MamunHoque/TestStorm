@@ -82,7 +82,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
     setState(prev => ({ ...prev, connecting: true, error: null }));
 
-    const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:5000';
+    // Use current window location for WebSocket connection to work with Vite proxy
+    const wsUrl = import.meta.env.VITE_WS_URL || window.location.origin;
     
     socketRef.current = io(wsUrl, {
       transports: ['websocket', 'polling'],

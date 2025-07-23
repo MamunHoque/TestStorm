@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { validateLoadTestRequest, validateUUID } from '../middleware/validation';
 import { LoadTestService } from '../services/LoadTestService';
@@ -10,7 +10,7 @@ const router = Router();
 const loadTestService = LoadTestService.getInstance();
 
 // Start load test
-router.post('/start', validateLoadTestRequest, asyncHandler(async (req, res) => {
+router.post('/start', validateLoadTestRequest, asyncHandler(async (req: Request, res: Response) => {
   const config = req.body;
   
   logger.info(`Starting load test: ${config.name}`);
@@ -21,7 +21,13 @@ router.post('/start', validateLoadTestRequest, asyncHandler(async (req, res) => 
     // Save execution to database
     const db = getDatabase();
     const executionRepo = new TestExecutionRepository(db);
-    await executionRepo.create(execution);
+    await executionRepo.create({
+      name: execution.name,
+      type: execution.type,
+      status: execution.status,
+      config_data: execution.config_data,
+      started_at: execution.started_at,
+    });
     
     res.json({
       success: true,
@@ -44,7 +50,7 @@ router.post('/start', validateLoadTestRequest, asyncHandler(async (req, res) => 
 }));
 
 // Stop load test
-router.post('/stop/:testId', validateUUID('testId'), asyncHandler(async (req, res) => {
+router.post('/stop/:testId', validateUUID('testId'), asyncHandler(async (req: Request, res: Response) => {
   const { testId } = req.params;
   
   logger.info(`Stopping load test: ${testId}`);
@@ -85,7 +91,7 @@ router.post('/stop/:testId', validateUUID('testId'), asyncHandler(async (req, re
 }));
 
 // Get load test status
-router.get('/status/:testId', validateUUID('testId'), asyncHandler(async (req, res) => {
+router.get('/status/:testId', validateUUID('testId'), asyncHandler(async (req: Request, res: Response) => {
   const { testId } = req.params;
   
   try {
@@ -118,7 +124,7 @@ router.get('/status/:testId', validateUUID('testId'), asyncHandler(async (req, r
 }));
 
 // Get running tests
-router.get('/running', asyncHandler(async (req, res) => {
+router.get('/running', asyncHandler(async (_req: Request, res: Response) => {
   try {
     const runningTestIds = loadTestService.getRunningTests();
     
@@ -157,7 +163,7 @@ router.get('/running', asyncHandler(async (req, res) => {
 }));
 
 // Get load test presets
-router.get('/presets', asyncHandler(async (req, res) => {
+router.get('/presets', asyncHandler(async (_req: Request, res: Response) => {
   const presets = [
     {
       name: 'Quick Test',
@@ -241,7 +247,7 @@ router.get('/presets', asyncHandler(async (req, res) => {
 }));
 
 // Validate load test configuration
-router.post('/validate', asyncHandler(async (req, res) => {
+router.post('/validate', asyncHandler(async (_req: Request, res: Response) => {
   try {
     // The validateLoadTestRequest middleware already validates the config
     res.json({

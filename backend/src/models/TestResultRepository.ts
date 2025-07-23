@@ -8,6 +8,7 @@ export interface TestResult {
   result_data: any; // JSON object
   metrics_data: any; // JSON object
   created_at: Date;
+  updated_at: Date;
 }
 
 export class TestResultRepository extends BaseRepository<TestResult> {
@@ -22,6 +23,7 @@ export class TestResultRepository extends BaseRepository<TestResult> {
       result_data: JSON.parse(row.result_data),
       metrics_data: JSON.parse(row.metrics_data),
       created_at: new Date(row.created_at),
+      updated_at: new Date(row.updated_at),
     };
   }
 

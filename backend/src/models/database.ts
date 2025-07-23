@@ -24,12 +24,12 @@ export class Database {
         fs.mkdirSync(dataDir, { recursive: true });
       }
 
-      this.db = new sqlite(this.dbPath);
-      
+      this.db = new sqlite.Database(this.dbPath);
+
       // Promisify database methods
-      this.db.run = promisify(this.db.run.bind(this.db));
-      this.db.get = promisify(this.db.get.bind(this.db));
-      this.db.all = promisify(this.db.all.bind(this.db));
+      (this.db as any).run = promisify(this.db.run.bind(this.db));
+      (this.db as any).get = promisify(this.db.get.bind(this.db));
+      (this.db as any).all = promisify(this.db.all.bind(this.db));
 
       // Enable foreign keys
       await this.run('PRAGMA foreign_keys = ON');
@@ -207,11 +207,37 @@ export class Database {
         END;
     `;
 
-    const statements = schema.split(';').filter(stmt => stmt.trim());
-    
+    // Split schema by semicolons, but handle triggers properly
+    const statements: string[] = [];
+    let currentStatement = '';
+    let inTrigger = false;
+
+    const lines = schema.split('\n');
+    for (const line of lines) {
+      currentStatement += line + '\n';
+
+      if (line.trim().toUpperCase().includes('CREATE TRIGGER')) {
+        inTrigger = true;
+      }
+
+      if (line.trim() === 'END;' && inTrigger) {
+        statements.push(currentStatement.trim());
+        currentStatement = '';
+        inTrigger = false;
+      } else if (line.trim().endsWith(';') && !inTrigger) {
+        statements.push(currentStatement.trim());
+        currentStatement = '';
+      }
+    }
+
+    // Add any remaining statement
+    if (currentStatement.trim()) {
+      statements.push(currentStatement.trim());
+    }
+
     for (const statement of statements) {
       if (statement.trim()) {
-        await this.run(statement.trim());
+        await this.run(statement);
       }
     }
 

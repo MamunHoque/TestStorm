@@ -1,0 +1,19 @@
+config:
+  target: 'https://httpbin.org/get'
+  phases:
+    - duration: 5
+      arrivalRate: 1
+      name: Ramp up
+    - duration: 10
+      arrivalRate: 1
+      name: Sustained load
+  timeout: 30000
+  defaults:
+    headers:
+      User-Agent: Artillery Load Tester
+scenarios:
+  - name: Load test scenario
+    weight: 100
+    flow:
+      - get:
+          url: 'https://httpbin.org/get'

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { validateApiTestRequest } from '../middleware/validation';
 import { ApiTestService } from '../services/ApiTestService';
@@ -8,7 +8,7 @@ const router = Router();
 const apiTestService = ApiTestService.getInstance();
 
 // Single API endpoint test
-router.post('/execute', validateApiTestRequest, asyncHandler(async (req, res) => {
+router.post('/execute', validateApiTestRequest, asyncHandler(async (req: Request, res: Response) => {
   const config = req.body;
   
   logger.info(`Executing API test: ${config.method} ${config.url}`);
@@ -34,9 +34,9 @@ router.post('/execute', validateApiTestRequest, asyncHandler(async (req, res) =>
 }));
 
 // Validate API endpoint accessibility
-router.post('/validate', asyncHandler(async (req, res) => {
+router.post('/validate', asyncHandler(async (req: Request, res: Response) => {
   const { url } = req.body;
-  
+
   if (!url) {
     return res.status(400).json({
       success: false,
@@ -47,8 +47,8 @@ router.post('/validate', asyncHandler(async (req, res) => {
 
   try {
     const validation = await apiTestService.validateUrl(url);
-    
-    res.json({
+
+    return res.json({
       success: true,
       data: validation,
       message: validation.valid ? 'URL is accessible' : 'URL validation failed',
@@ -56,7 +56,7 @@ router.post('/validate', asyncHandler(async (req, res) => {
     });
   } catch (error: any) {
     logger.error('URL validation failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'URL validation failed',
       message: error.message,
@@ -66,7 +66,7 @@ router.post('/validate', asyncHandler(async (req, res) => {
 }));
 
 // Test connection to endpoint
-router.post('/test-connection', asyncHandler(async (req, res) => {
+router.post('/test-connection', asyncHandler(async (req: Request, res: Response) => {
   const { url, timeout = 30000, validateSSL = true } = req.body;
   
   if (!url) {
@@ -83,8 +83,8 @@ router.post('/test-connection', asyncHandler(async (req, res) => {
       timeout,
       validateSSL,
     });
-    
-    res.json({
+
+    return res.json({
       success: true,
       data: connectionTest,
       message: connectionTest.success ? 'Connection successful' : 'Connection failed',
@@ -92,7 +92,7 @@ router.post('/test-connection', asyncHandler(async (req, res) => {
     });
   } catch (error: any) {
     logger.error('Connection test failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Connection test failed',
       message: error.message,
@@ -102,7 +102,7 @@ router.post('/test-connection', asyncHandler(async (req, res) => {
 }));
 
 // Get supported HTTP methods
-router.get('/methods', (req, res) => {
+router.get('/methods', (_req: Request, res: Response) => {
   res.json({
     success: true,
     data: {

@@ -48,8 +48,8 @@ export class ApiTestService {
         response: apiResponse,
         metrics,
         status: 'success',
-        created_at: new Date(startTime),
-        updated_at: new Date(),
+        createdAt: new Date(startTime),
+        updatedAt: new Date(),
       };
 
       logger.info(`API test completed successfully: ${config.method} ${config.url}`, {
@@ -91,8 +91,8 @@ export class ApiTestService {
           response: apiResponse,
           metrics,
           status: 'success', // Still successful HTTP communication
-          created_at: new Date(startTime),
-          updated_at: new Date(),
+          createdAt: new Date(startTime),
+          updatedAt: new Date(),
         };
 
         logger.info(`API test completed with error response: ${config.method} ${config.url}`, {
@@ -129,8 +129,8 @@ export class ApiTestService {
           },
           status: 'error',
           error: errorMessage,
-          created_at: new Date(startTime),
-          updated_at: new Date(),
+          createdAt: new Date(startTime),
+          updatedAt: new Date(),
         };
 
         logger.error(`API test failed: ${config.method} ${config.url}`, {
@@ -160,14 +160,14 @@ export class ApiTestService {
       try {
         // Try to parse as JSON first
         axiosConfig.data = JSON.parse(config.body);
-        if (!axiosConfig.headers['Content-Type']) {
-          axiosConfig.headers['Content-Type'] = 'application/json';
+        if (!axiosConfig.headers!['Content-Type']) {
+          axiosConfig.headers!['Content-Type'] = 'application/json';
         }
       } catch {
         // Use as plain text
         axiosConfig.data = config.body;
-        if (!axiosConfig.headers['Content-Type']) {
-          axiosConfig.headers['Content-Type'] = 'text/plain';
+        if (!axiosConfig.headers!['Content-Type']) {
+          axiosConfig.headers!['Content-Type'] = 'text/plain';
         }
       }
     }
@@ -209,7 +209,7 @@ export class ApiTestService {
   }
 
   // Calculate detailed metrics
-  private calculateMetrics(startTime: bigint, endTime: bigint, response: AxiosResponse): ApiTestMetrics {
+  private calculateMetrics(startTime: bigint, endTime: bigint, _response: AxiosResponse): ApiTestMetrics {
     const totalTimeNs = endTime - startTime;
     const totalTimeMs = Number(totalTimeNs) / 1000000; // Convert to milliseconds
 
