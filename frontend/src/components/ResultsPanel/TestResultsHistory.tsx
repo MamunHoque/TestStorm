@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Download, Trash2, Calendar, Clock, Users, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { AnimatedContainer, LoadingSkeleton } from '../common';
+import { AnimatedContainer, LoadingSkeleton, ExportButton } from '../common';
+import { ReportGenerator } from '../../utils/reportGenerator';
 
 interface TestResult {
   id: string;
@@ -168,37 +169,40 @@ export function TestResultsHistory({
           </p>
         </div>
         
-        {selectedResults.size > 0 && (
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {selectedResults.size} selected
-            </span>
-            <button
-              onClick={() => {
-                selectedResults.forEach(id => {
-                  const result = results.find(r => r.id === id);
-                  if (result && onResultExport) onResultExport(result);
-                });
-              }}
-              className="btn-secondary text-sm"
-              title="Export selected"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                selectedResults.forEach(id => {
-                  if (onResultDelete) onResultDelete(id);
-                });
-                setSelectedResults(new Set());
-              }}
-              className="btn-danger text-sm"
-              title="Delete selected"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+        <div className="flex items-center space-x-3">
+          {selectedResults.size > 0 && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {selectedResults.size} selected
+              </span>
+              <button
+                onClick={() => {
+                  selectedResults.forEach(id => {
+                    if (onResultDelete) onResultDelete(id);
+                  });
+                  setSelectedResults(new Set());
+                }}
+                className="btn-danger text-sm"
+                title="Delete selected"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          
+          {/* Bulk Export Button */}
+          <ExportButton
+            data={selectedResults.size > 0 
+              ? results.filter(r => selectedResults.has(r.id))
+              : filteredAndSortedResults
+            }
+            filename={selectedResults.size > 0 
+              ? `selected-test-results-${new Date().toISOString().slice(0, 10)}`
+              : `all-test-results-${new Date().toISOString().slice(0, 10)}`
+            }
+            className="text-sm"
+          />
+        </div>
       </div>
 
       {/* Filters */}
