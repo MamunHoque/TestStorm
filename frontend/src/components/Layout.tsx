@@ -3,6 +3,9 @@ import { Monitor, Zap, BarChart3, Settings, Moon, Sun, Computer } from 'lucide-r
 import { useTheme } from '../hooks/useTheme';
 import { useUIState } from '../store';
 import { ApiTestPanel } from './ApiTestPanel';
+import { LoadTestPanel } from './LoadTestPanel';
+
+type TabType = 'api-test' | 'load-test' | 'results';
 
 export function Layout() {
   const { activeTab, setActiveTab } = useUIState();
@@ -92,20 +95,7 @@ export function Layout() {
         <div className="glass-card">
           {activeTab === 'api-test' && <ApiTestPanel />}
 
-          {activeTab === 'load-test' && (
-            <div className="text-center py-12">
-              <Zap className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                Load Test Panel
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Configure and run load tests with up to 10,000 virtual users
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                Coming soon in Task 10...
-              </p>
-            </div>
-          )}
+          {activeTab === 'load-test' && <LoadTestPanel />}
 
           {activeTab === 'results' && (
             <div className="text-center py-12">
