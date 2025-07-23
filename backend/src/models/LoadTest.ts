@@ -1,73 +1,88 @@
-import { ApiTestConfig } from './ApiTest';
+import { z } from 'zod';
+import { ApiTestConfig, ApiTestConfigSchema } from './ApiTest';
 
 // Test status enumeration
-export type TestStatus = 'running' | 'completed' | 'stopped' | 'failed';
+export const TestStatusSchema = z.enum(['running', 'completed', 'stopped', 'failed']);
+export type TestStatus = z.infer<typeof TestStatusSchema>;
 
-// Load Test Configuration interface
-export interface LoadTestConfig {
-  id: string;
-  apiConfig: ApiTestConfig;
-  concurrentUsers: number;
-  duration: number; // in seconds
-  rampUpTime: number; // in seconds
-  createdAt: Date;
-}
+// Load Test Configuration schema and interface
+export const LoadTestConfigSchema = z.object({
+  id: z.string(),
+  apiConfig: ApiTestConfigSchema,
+  concurrentUsers: z.number().int().min(1, 'At least 1 concurrent user is required').max(10000, 'Maximum 10,000 concurrent users allowed'),
+  duration: z.number().int().min(1, 'Duration must be at least 1 second').max(3600, 'Maximum duration is 1 hour (3600 seconds)'),
+  rampUpTime: z.number().int().min(0, 'Ramp-up time cannot be negative').max(300, 'Maximum ramp-up time is 5 minutes (300 seconds)'),
+  createdAt: z.date(),
+}).refine(data => data.rampUpTime < data.duration, {
+  message: 'Ramp-up time must be less than test duration',
+  path: ['rampUpTime'],
+});
+export interface LoadTestConfig extends z.infer<typeof LoadTestConfigSchema> {}
 
 // Real-time metric point for charts
-export interface MetricPoint {
-  timestamp: number;
-  requestsPerSecond: number;
-  averageLatency: number;
-  errorRate: number;
-  activeUsers: number;
-}
+export const MetricPointSchema = z.object({
+  timestamp: z.number().positive(),
+  requestsPerSecond: z.number().min(0),
+  averageLatency: z.number().min(0),
+  errorRate: z.number().min(0).max(1),
+  activeUsers: z.number().int().min(0),
+});
+export interface MetricPoint extends z.infer<typeof MetricPointSchema> {}
 
 // Test results summary
-export interface TestSummary {
-  totalRequests: number;
-  successfulRequests: number;
-  failedRequests: number;
-  averageLatency: number;
-  p95Latency: number;
-  p99Latency: number;
-  maxLatency: number;
-  requestsPerSecond: number;
-  errorRate: number;
-}
+export const TestSummarySchema = z.object({
+  totalRequests: z.number().int().min(0),
+  successfulRequests: z.number().int().min(0),
+  failedRequests: z.number().int().min(0),
+  averageLatency: z.number().min(0),
+  p95Latency: z.number().min(0),
+  p99Latency: z.number().min(0),
+  maxLatency: z.number().min(0),
+  requestsPerSecond: z.number().min(0),
+  errorRate: z.number().min(0).max(1),
+});
+export interface TestSummary extends z.infer<typeof TestSummarySchema> {}
 
-// Complete test results interface
-export interface TestResults {
-  id: string;
-  testConfigId: string;
-  startTime: Date;
-  endTime: Date;
-  status: TestStatus;
-  summary: TestSummary;
-  metrics: MetricPoint[];
-}
+// Complete test results schema and interface
+export const TestResultsSchema = z.object({
+  id: z.string(),
+  testConfigId: z.string(),
+  startTime: z.date(),
+  endTime: z.date(),
+  status: TestStatusSchema,
+  summary: TestSummarySchema,
+  metrics: z.array(MetricPointSchema),
+});
+export interface TestResults extends z.infer<typeof TestResultsSchema> {}
 
-// Load test start request
-export interface StartLoadTestRequest {
-  target: ApiTestConfig;
-  config: {
-    concurrentUsers: number;
-    duration: number;
-    rampUpTime: number;
-  };
-}
+// Load test start request schema and interface
+export const StartLoadTestRequestSchema = z.object({
+  target: ApiTestConfigSchema,
+  config: z.object({
+    concurrentUsers: z.number().int().min(1).max(10000),
+    duration: z.number().int().min(1).max(3600),
+    rampUpTime: z.number().int().min(0).max(300),
+  }),
+}).refine(data => data.config.rampUpTime < data.config.duration, {
+  message: 'Ramp-up time must be less than test duration',
+  path: ['config', 'rampUpTime'],
+});
+export interface StartLoadTestRequest extends z.infer<typeof StartLoadTestRequestSchema> {}
 
-// Load test start response
-export interface StartLoadTestResponse {
-  testId: string;
-  status: 'started' | 'error';
-  message?: string;
-}
+// Load test start response schema and interface
+export const StartLoadTestResponseSchema = z.object({
+  testId: z.string(),
+  status: z.enum(['started', 'error']),
+  message: z.string().optional(),
+});
+export interface StartLoadTestResponse extends z.infer<typeof StartLoadTestResponseSchema> {}
 
-// Load test stop response
-export interface StopLoadTestResponse {
-  status: 'stopped';
-  finalResults: TestResults;
-}
+// Load test stop response schema and interface
+export const StopLoadTestResponseSchema = z.object({
+  status: z.literal('stopped'),
+  finalResults: TestResultsSchema,
+});
+export interface StopLoadTestResponse extends z.infer<typeof StopLoadTestResponseSchema> {}
 
 // Load Test class for business logic
 export class LoadTest {
@@ -216,43 +231,26 @@ export class LoadTest {
     return sorted[Math.max(0, index)];
   }
 
-  // Validate the load test configuration
+  // Validate the load test configuration using Zod
   validate(): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    // Validate concurrent users
-    if (this.config.concurrentUsers < 1) {
-      errors.push('At least 1 concurrent user is required');
+    try {
+      LoadTestConfigSchema.parse(this.config);
+      return {
+        isValid: true,
+        errors: [],
+      };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return {
+          isValid: false,
+          errors: error.issues.map(err => `${err.path.join('.')}: ${err.message}`),
+        };
+      }
+      return {
+        isValid: false,
+        errors: ['Unknown validation error'],
+      };
     }
-    if (this.config.concurrentUsers > 10000) {
-      errors.push('Maximum 10,000 concurrent users allowed');
-    }
-
-    // Validate duration
-    if (this.config.duration < 1) {
-      errors.push('Duration must be at least 1 second');
-    }
-    if (this.config.duration > 3600) {
-      errors.push('Maximum duration is 1 hour (3600 seconds)');
-    }
-
-    // Validate ramp-up time
-    if (this.config.rampUpTime < 0) {
-      errors.push('Ramp-up time cannot be negative');
-    }
-    if (this.config.rampUpTime > 300) {
-      errors.push('Maximum ramp-up time is 5 minutes (300 seconds)');
-    }
-
-    // Validate that ramp-up time is not longer than test duration
-    if (this.config.rampUpTime >= this.config.duration) {
-      errors.push('Ramp-up time must be less than test duration');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
   }
 
   // Convert to JSON for storage/transmission

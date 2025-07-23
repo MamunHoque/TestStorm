@@ -10,6 +10,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
+const apiTest_1 = __importDefault(require("./routes/apiTest"));
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -30,6 +31,8 @@ app.use((0, cors_1.default)({
 }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+// Routes
+app.use('/api', apiTest_1.default);
 // Basic health check route
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });

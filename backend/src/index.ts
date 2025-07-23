@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import apiTestRoutes from './routes/apiTest';
 
 // Load environment variables
 dotenv.config();
@@ -26,6 +27,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/api', apiTestRoutes);
 
 // Basic health check route
 app.get('/health', (req, res) => {

@@ -1,57 +1,66 @@
+import { z } from 'zod';
+
 // HTTP Methods supported by the application
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export const HttpMethodSchema = z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']);
+export type HttpMethod = z.infer<typeof HttpMethodSchema>;
 
 // Authentication types
-export type AuthType = 'bearer' | 'apikey' | 'basic';
+export const AuthTypeSchema = z.enum(['bearer', 'apikey', 'basic']);
+export type AuthType = z.infer<typeof AuthTypeSchema>;
 
-// Authentication configuration interface
-export interface AuthConfig {
-  type: AuthType;
-  credentials: Record<string, string>;
-}
+// Authentication configuration schema and interface
+export const AuthConfigSchema = z.object({
+  type: AuthTypeSchema,
+  credentials: z.record(z.string(), z.string()),
+});
+export interface AuthConfig extends z.infer<typeof AuthConfigSchema> {}
 
-// API Test Configuration interface
-export interface ApiTestConfig {
-  id?: string;
-  name: string;
-  url: string;
-  method: HttpMethod;
-  headers: Record<string, string>;
-  queryParams: Record<string, string>;
-  body?: string;
-  authentication?: AuthConfig;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// API Test Configuration schema and interface
+export const ApiTestConfigSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, 'Test name is required').max(100, 'Test name must be less than 100 characters'),
+  url: z.string().url('Invalid URL format'),
+  method: HttpMethodSchema,
+  headers: z.record(z.string(), z.string()),
+  queryParams: z.record(z.string(), z.string()),
+  body: z.string().optional(),
+  authentication: AuthConfigSchema.optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+export interface ApiTestConfig extends z.infer<typeof ApiTestConfigSchema> {}
 
-// API Test Response interface
-export interface ApiTestResponse {
-  statusCode: number;
-  responseTime: number;
-  headers: Record<string, string>;
-  body: any;
-  error?: string;
-  timestamp: Date;
-}
+// API Test Response schema and interface
+export const ApiTestResponseSchema = z.object({
+  statusCode: z.number().int().min(100).max(599),
+  responseTime: z.number().positive(),
+  headers: z.record(z.string(), z.string()),
+  body: z.any(),
+  error: z.string().optional(),
+  timestamp: z.date(),
+});
+export interface ApiTestResponse extends z.infer<typeof ApiTestResponseSchema> {}
 
-// Test endpoint request interface
-export interface TestEndpointRequest {
-  url: string;
-  method: HttpMethod;
-  headers: Record<string, string>;
-  queryParams: Record<string, string>;
-  body?: string;
-  auth?: AuthConfig;
-}
+// Test endpoint request schema and interface
+export const TestEndpointRequestSchema = z.object({
+  url: z.string().url('Invalid URL format'),
+  method: HttpMethodSchema,
+  headers: z.record(z.string(), z.string()),
+  queryParams: z.record(z.string(), z.string()),
+  body: z.string().optional(),
+  auth: AuthConfigSchema.optional(),
+});
+export interface TestEndpointRequest extends z.infer<typeof TestEndpointRequestSchema> {}
 
-// Test endpoint response interface
-export interface TestEndpointResponse {
-  statusCode: number;
-  responseTime: number;
-  headers: Record<string, string>;
-  body: any;
-  error?: string;
-}
+// Test endpoint response schema and interface
+export const TestEndpointResponseSchema = z.object({
+  statusCode: z.number().int().min(100).max(599),
+  responseTime: z.number().positive(),
+  headers: z.record(z.string(), z.string()),
+  body: z.any(),
+  error: z.string().optional(),
+});
+export interface TestEndpointResponse extends z.infer<typeof TestEndpointResponseSchema> {}
 
 // API Test class for business logic
 export class ApiTest {
@@ -85,80 +94,71 @@ export class ApiTest {
     };
   }
 
-  // Validate the test configuration
+  // Validate the test configuration using Zod
   validate(): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
+    try {
+      ApiTestConfigSchema.parse(this.config);
+      
+      // Additional custom validations
+      const errors: string[] = [];
 
-    // Validate URL
-    if (!this.config.url) {
-      errors.push('URL is required');
-    } else {
-      try {
-        const url = new URL(this.config.url);
-        if (!['http:', 'https:'].includes(url.protocol)) {
-          errors.push('URL must use HTTP or HTTPS protocol');
+      // Validate headers don't have empty keys or spaces in keys
+      Object.keys(this.config.headers).forEach(key => {
+        if (!key.trim()) {
+          errors.push('Header name cannot be empty');
         }
-      } catch {
-        errors.push('Invalid URL format');
+        if (key.includes(' ')) {
+          errors.push(`Header name "${key}" cannot contain spaces`);
+        }
+      });
+
+      // Validate authentication credentials based on type
+      if (this.config.authentication) {
+        const auth = this.config.authentication;
+        switch (auth.type) {
+          case 'bearer':
+            if (!auth.credentials.token) {
+              errors.push('Bearer token is required');
+            }
+            break;
+          case 'apikey':
+            if (!auth.credentials.key || !auth.credentials.value) {
+              errors.push('API key name and value are required');
+            }
+            break;
+          case 'basic':
+            if (!auth.credentials.username || !auth.credentials.password) {
+              errors.push('Username and password are required for basic auth');
+            }
+            break;
+        }
       }
-    }
 
-    // Validate name
-    if (!this.config.name || this.config.name.trim().length === 0) {
-      errors.push('Test name is required');
-    }
-
-    // Validate method
-    const validMethods: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-    if (!validMethods.includes(this.config.method)) {
-      errors.push('Invalid HTTP method');
-    }
-
-    // Validate headers
-    Object.entries(this.config.headers).forEach(([key, value]) => {
-      if (!key.trim()) {
-        errors.push('Header name cannot be empty');
+      // Validate JSON body if present
+      if (this.config.body) {
+        try {
+          JSON.parse(this.config.body);
+        } catch {
+          errors.push('Request body must be valid JSON');
+        }
       }
-      if (key.includes(' ')) {
-        errors.push(`Header name "${key}" cannot contain spaces`);
-      }
-    });
 
-    // Validate authentication
-    if (this.config.authentication) {
-      const auth = this.config.authentication;
-      switch (auth.type) {
-        case 'bearer':
-          if (!auth.credentials.token) {
-            errors.push('Bearer token is required');
-          }
-          break;
-        case 'apikey':
-          if (!auth.credentials.key || !auth.credentials.value) {
-            errors.push('API key name and value are required');
-          }
-          break;
-        case 'basic':
-          if (!auth.credentials.username || !auth.credentials.password) {
-            errors.push('Username and password are required for basic auth');
-          }
-          break;
+      return {
+        isValid: errors.length === 0,
+        errors,
+      };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return {
+          isValid: false,
+          errors: error.issues.map(err => `${err.path.join('.')}: ${err.message}`),
+        };
       }
+      return {
+        isValid: false,
+        errors: ['Unknown validation error'],
+      };
     }
-
-    // Validate JSON body if present
-    if (this.config.body) {
-      try {
-        JSON.parse(this.config.body);
-      } catch {
-        errors.push('Request body must be valid JSON');
-      }
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
   }
 
   // Convert to JSON for storage/transmission
