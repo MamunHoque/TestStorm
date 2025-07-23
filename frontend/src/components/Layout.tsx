@@ -1,9 +1,11 @@
 import React from 'react';
 import { Monitor, Zap, BarChart3, Settings, Moon, Sun, Computer } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
 import { useUIState } from '../store';
 import { ApiTestPanel } from './ApiTestPanel';
 import { LoadTestPanel } from './LoadTestPanel';
+import { TabTransition, AnimatedContainer } from './common';
 
 type TabType = 'api-test' | 'load-test' | 'results';
 
@@ -26,98 +28,127 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <header className="glass-panel m-4 mb-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
+      <AnimatedContainer direction="down" delay={0.1}>
+        <header className="glass-panel m-4 mb-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <motion.div 
+                className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                <Zap className="w-6 h-6 text-white" />
+              </motion.div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  API Load Testing & Monitoring
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Professional-grade API performance testing
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                API Load Testing & Monitoring
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Professional-grade API performance testing
-              </p>
+
+            {/* Theme Switcher */}
+            <div className="flex items-center space-x-2">
+              <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                {themeOptions.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <motion.button
+                      key={option.value}
+                      onClick={() => setTheme(option.value)}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        theme === option.value
+                          ? 'bg-white dark:bg-gray-700 shadow-sm'
+                          : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                      title={option.label}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </motion.button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Theme Switcher */}
-          <div className="flex items-center space-x-2">
-            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-              {themeOptions.map((option) => {
-                const Icon = option.icon;
+          {/* Navigation Tabs */}
+          <nav className="mt-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex space-x-8">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
                 return (
-                  <button
-                    key={option.value}
-                    onClick={() => setTheme(option.value)}
-                    className={`p-2 rounded-md transition-all duration-200 ${
-                      theme === option.value
-                        ? 'bg-white dark:bg-gray-700 shadow-sm'
-                        : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 relative ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                     }`}
-                    title={option.label}
+                    whileHover={{ y: -2 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
                     <Icon className="w-4 h-4" />
-                  </button>
+                    <span>{tab.label}</span>
+                    {activeTab === tab.id && (
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                        layoutId="activeTab"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                  </motion.button>
                 );
               })}
             </div>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <nav className="mt-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-      </header>
+          </nav>
+        </header>
+      </AnimatedContainer>
 
       {/* Main Content */}
       <main className="p-4">
-        <div className="glass-card">
-          {activeTab === 'api-test' && <ApiTestPanel />}
+        <AnimatedContainer direction="up" delay={0.2}>
+          <div className="glass-card">
+            <TabTransition activeKey={activeTab}>
+              {activeTab === 'api-test' && <ApiTestPanel />}
 
-          {activeTab === 'load-test' && <LoadTestPanel />}
+              {activeTab === 'load-test' && <LoadTestPanel />}
 
-          {activeTab === 'results' && (
-            <div className="text-center py-12">
-              <BarChart3 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                Results & History
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                View test results, export reports, and analyze performance trends
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                Coming soon in Task 18...
-              </p>
-            </div>
-          )}
-        </div>
+              {activeTab === 'results' && (
+                <div className="text-center py-12">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                  >
+                    <BarChart3 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                      Results & History
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      View test results, export reports, and analyze performance trends
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                      Coming soon in Task 18...
+                    </p>
+                  </motion.div>
+                </div>
+              )}
+            </TabTransition>
+          </div>
+        </AnimatedContainer>
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
-        <p>API Load Testing & Monitoring SPA v1.0.0</p>
-      </footer>
+      <AnimatedContainer direction="up" delay={0.3}>
+        <footer className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
+          <p>API Load Testing & Monitoring SPA v1.0.0</p>
+        </footer>
+      </AnimatedContainer>
     </div>
   );
 }
