@@ -122,7 +122,7 @@
   - Add smooth transitions for tab switching and panel updates
   - _Requirements: 3.6, 8.1, 8.4, 8.5, 8.6_
 
-- [ ] 18. Create test results storage and history management
+- [*] 18. Create test results storage and history management
   - Implement test results persistence in SQLite database
   - Create history panel with list of past tests and key metrics
   - Add test result retrieval and display functionality

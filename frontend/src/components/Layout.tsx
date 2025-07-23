@@ -5,6 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useUIState } from '../store';
 import { ApiTestPanel } from './ApiTestPanel';
 import { LoadTestPanel } from './LoadTestPanel';
+import { ResultsPanel } from './ResultsPanel';
 import { TabTransition, AnimatedContainer } from './common';
 
 type TabType = 'api-test' | 'load-test' | 'results';
@@ -118,26 +119,7 @@ export function Layout() {
 
               {activeTab === 'load-test' && <LoadTestPanel />}
 
-              {activeTab === 'results' && (
-                <div className="text-center py-12">
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                  >
-                    <BarChart3 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                      Results & History
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      View test results, export reports, and analyze performance trends
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                      Coming soon in Task 18...
-                    </p>
-                  </motion.div>
-                </div>
-              )}
+              {activeTab === 'results' && <ResultsPanel />}
             </TabTransition>
           </div>
         </AnimatedContainer>
