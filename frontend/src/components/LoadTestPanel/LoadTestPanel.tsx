@@ -1,10 +1,26 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Play, Square, RotateCcw, Code, Monitor, Zap, Settings } from 'lucide-react';
 import { LoadTestForm } from './LoadTestForm';
+import { PerformanceCharts } from './PerformanceCharts';
 import { LoadTestConfig } from '../../types/loadTest';
 import { useLoadTestState } from '../../store';
 import { useLoadTestWebSocket } from '../../hooks/useLoadTestWebSocket';
 import { loadTestService } from '../../services';
+
+interface MetricsDataPoint {
+  timestamp: number;
+  requestsPerSecond: number;
+  errorRate: number;
+  avgResponseTime: number;
+  p50ResponseTime: number;
+  p90ResponseTime: number;
+  p95ResponseTime: number;
+  p99ResponseTime: number;
+  activeUsers: number;
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+}
 
 export function LoadTestPanel() {
   const { 
@@ -18,6 +34,7 @@ export function LoadTestPanel() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentTestId, setCurrentTestId] = useState<string | null>(null);
   const [showGraphQL, setShowGraphQL] = useState(false);
+  const [metricsHistory, setMetricsHistory] = useState<MetricsDataPoint[]>([]);
 
   // WebSocket hook for real-time updates
   const {
@@ -82,7 +99,34 @@ export function LoadTestPanel() {
     setCurrentTestId(null);
     setIsRunning(false);
     setCurrentLoadTest(null);
+    setMetricsHistory([]);
   }, [setCurrentLoadTest]);
+
+  // Update metrics history when new metrics arrive
+  useEffect(() => {
+    if (metrics && isRunning) {
+      const newDataPoint: MetricsDataPoint = {
+        timestamp: Date.now(),
+        requestsPerSecond: metrics.requestsPerSecond || 0,
+        errorRate: metrics.errorRate || 0,
+        avgResponseTime: metrics.avgResponseTime || 0,
+        p50ResponseTime: metrics.p50ResponseTime || 0,
+        p90ResponseTime: metrics.p90ResponseTime || 0,
+        p95ResponseTime: metrics.p95ResponseTime || 0,
+        p99ResponseTime: metrics.p99ResponseTime || 0,
+        activeUsers: metrics.activeUsers || 0,
+        totalRequests: metrics.totalRequests || 0,
+        successfulRequests: metrics.successfulRequests || 0,
+        failedRequests: metrics.failedRequests || 0,
+      };
+
+      setMetricsHistory(prev => {
+        // Keep last 100 data points for performance
+        const updated = [...prev, newDataPoint];
+        return updated.slice(-100);
+      });
+    }
+  }, [metrics, isRunning]);
 
   return (
     <div className="space-y-6">
@@ -240,6 +284,12 @@ export function LoadTestPanel() {
               </div>
             )}
           </div>
+
+          {/* Performance Charts */}
+          <PerformanceCharts 
+            metricsData={metricsHistory}
+            isRunning={isRunning}
+          />
 
           {/* Test Status */}
           {(isRunning || currentTestId) && (

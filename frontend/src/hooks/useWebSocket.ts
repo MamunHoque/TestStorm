@@ -5,13 +5,17 @@ import { io, Socket } from 'socket.io-client';
 export interface LoadTestMetricsUpdate {
   testId: string;
   timestamp: Date;
-  currentUsers: number;
+  activeUsers: number;
   requestsPerSecond: number;
-  errorsPerSecond: number;
-  averageResponseTime: number;
+  errorRate: number;
+  avgResponseTime: number;
+  p50ResponseTime: number;
+  p90ResponseTime: number;
   p95ResponseTime: number;
-  successRate: number;
+  p99ResponseTime: number;
   totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
   elapsedTime: number;
 }
 
