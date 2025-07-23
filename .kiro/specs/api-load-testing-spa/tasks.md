@@ -19,7 +19,7 @@
   - Write unit tests for database operations
   - _Requirements: 4.2, 4.3, 4.5_
 
-- [ ] 4. Build basic Express API server with security middleware
+- [*] 4. Build basic Express API server with security middleware
   - Set up Express server with TypeScript, CORS, and Helmet.js security
   - Implement basic API endpoints for health check and configuration
   - Add request validation middleware and error handling

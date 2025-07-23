@@ -6,7 +6,15 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
+import { 
+  rateLimit, 
+  securityHeaders, 
+  sanitizeInput, 
+  securityLogger,
+  requestSizeLimit 
+} from './middleware/security';
 import { apiRoutes } from './routes';
+import { initializeDatabase } from './models/database';
 
 // Load environment variables
 dotenv.config();
@@ -31,9 +39,30 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
     },
   },
+  crossOriginEmbedderPolicy: false,
 }));
+
+// Additional security headers
+app.use(securityHeaders);
+
+// Rate limiting
+app.use('/api', rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // limit each IP to 1000 requests per windowMs
+  message: 'Too many requests from this IP, please try again later'
+}));
+
+// Request size limiting
+app.use(requestSizeLimit(10 * 1024 * 1024)); // 10MB limit
+
+// Input sanitization
+app.use(sanitizeInput);
+
+// Security logging
+app.use(securityLogger);
 
 // CORS configuration
 app.use(cors({
@@ -86,11 +115,26 @@ app.use('*', (req, res) => {
   });
 });
 
-// Start server
-server.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database
+    await initializeDatabase();
+    logger.info('Database initialized successfully');
+
+    // Start server
+    server.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
