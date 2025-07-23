@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Monitor, Zap, BarChart3, Settings, Moon, Sun, Computer } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-
-type TabType = 'api-test' | 'load-test' | 'results';
+import { useUIState } from '../store';
 
 export function Layout() {
-  const [activeTab, setActiveTab] = useState<TabType>('api-test');
+  const { activeTab, setActiveTab } = useUIState();
   const { theme, setTheme, isDark } = useTheme();
 
   const tabs = [
