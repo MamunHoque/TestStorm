@@ -16,10 +16,12 @@ router.post('/test-endpoint', async (req: Request, res: Response) => {
     // Extract request data
     const testRequest: TestEndpointRequest = {
       url: req.body.url,
+      apiType: req.body.apiType || 'rest',
       method: req.body.method,
       headers: req.body.headers || {},
       queryParams: req.body.queryParams || {},
       body: req.body.body,
+      graphql: req.body.graphql,
       auth: req.body.auth,
     };
 

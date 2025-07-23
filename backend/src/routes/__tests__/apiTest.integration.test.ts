@@ -120,6 +120,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should reject request with invalid URL', async () => {
         const testRequest: TestEndpointRequest = {
           url: 'invalid-url',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -159,6 +160,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should reject bearer auth without token', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -184,6 +186,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle GET request successfully', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'GET',
           headers: { 'User-Agent': 'API-Test-Client' },
           queryParams: { test: 'value' },
@@ -210,6 +213,7 @@ describe('API Test Routes - Integration Tests', () => {
         const testData = { message: 'Hello, World!' };
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           queryParams: {},
@@ -236,6 +240,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle Bearer token authentication', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/auth/bearer`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -262,6 +267,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle Basic authentication', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/auth/basic`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -288,6 +294,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle API key authentication', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -315,6 +322,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle 404 responses', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/error/404`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -341,6 +349,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle 500 responses', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/error/500`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -365,6 +374,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle network errors', async () => {
         const testRequest: TestEndpointRequest = {
           url: 'http://nonexistent-host-12345.com',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -392,6 +402,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle JSON responses', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -416,6 +427,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should measure response time', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -439,6 +451,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should handle query parameters correctly', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {
@@ -470,6 +483,7 @@ describe('API Test Routes - Integration Tests', () => {
       it('should send custom headers correctly', async () => {
         const testRequest: TestEndpointRequest = {
           url: `${testServerUrl}/test`,
+          apiType: 'rest',
           method: 'GET',
           headers: {
             'X-Custom-Header': 'custom-value',

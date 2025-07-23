@@ -5,7 +5,8 @@ import {
   GraphQLResponseSchema,
   GraphQLRequest,
   GraphQLResponse,
-  GraphQLOperationType
+  GraphQLOperationType,
+  GraphQLValidationUtils
 } from './graphql';
 
 // HTTP Methods supported by the application

@@ -8,6 +8,7 @@ describe('Data Model Utils', () => {
     id: 'api-test-1',
     name: 'Test API',
     url: 'https://api.example.com/test',
+    apiType: 'rest',
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     queryParams: { limit: '10' },

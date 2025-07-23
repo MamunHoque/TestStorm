@@ -12,6 +12,7 @@ describe('HttpClientService', () => {
     it('should validate a correct request', () => {
       const request: TestEndpointRequest = {
         url: 'https://api.example.com/test',
+        apiType: 'rest',
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         queryParams: { param: 'value' },
@@ -25,6 +26,7 @@ describe('HttpClientService', () => {
     it('should reject invalid URL', () => {
       const request: TestEndpointRequest = {
         url: 'invalid-url',
+        apiType: 'rest',
         method: 'GET',
         headers: {},
         queryParams: {},
@@ -38,6 +40,7 @@ describe('HttpClientService', () => {
     it('should reject non-HTTP/HTTPS protocols', () => {
       const request: TestEndpointRequest = {
         url: 'ftp://example.com/file',
+        apiType: 'rest',
         method: 'GET',
         headers: {},
         queryParams: {},
@@ -64,6 +67,7 @@ describe('HttpClientService', () => {
     it('should reject empty header names', () => {
       const request: TestEndpointRequest = {
         url: 'https://api.example.com/test',
+        apiType: 'rest',
         method: 'GET',
         headers: { '': 'value', ' ': 'another-value' },
         queryParams: {},
@@ -77,6 +81,7 @@ describe('HttpClientService', () => {
     it('should reject header names with spaces', () => {
       const request: TestEndpointRequest = {
         url: 'https://api.example.com/test',
+        apiType: 'rest',
         method: 'GET',
         headers: { 'invalid header': 'value' },
         queryParams: {},
@@ -91,6 +96,7 @@ describe('HttpClientService', () => {
       it('should validate bearer token authentication', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -108,6 +114,7 @@ describe('HttpClientService', () => {
       it('should reject bearer auth without token', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -125,6 +132,7 @@ describe('HttpClientService', () => {
       it('should validate API key authentication', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -142,6 +150,7 @@ describe('HttpClientService', () => {
       it('should reject API key auth without key or value', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -159,6 +168,7 @@ describe('HttpClientService', () => {
       it('should validate basic authentication', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -176,6 +186,7 @@ describe('HttpClientService', () => {
       it('should reject basic auth without username or password', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'GET',
           headers: {},
           queryParams: {},
@@ -195,6 +206,7 @@ describe('HttpClientService', () => {
       it('should validate valid JSON body with JSON content-type', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           queryParams: {},
@@ -209,6 +221,7 @@ describe('HttpClientService', () => {
       it('should reject invalid JSON body with JSON content-type', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           queryParams: {},
@@ -223,6 +236,7 @@ describe('HttpClientService', () => {
       it('should allow invalid JSON body with non-JSON content-type', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
           queryParams: {},
@@ -237,6 +251,7 @@ describe('HttpClientService', () => {
       it('should allow invalid JSON body without content-type', () => {
         const request: TestEndpointRequest = {
           url: 'https://api.example.com/test',
+          apiType: 'rest',
           method: 'POST',
           headers: {},
           queryParams: {},

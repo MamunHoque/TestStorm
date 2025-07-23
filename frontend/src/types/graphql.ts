@@ -78,7 +78,7 @@ export class GraphQLValidationUtils {
 
     try {
       const variables = JSON.parse(variablesStr);
-      if (typeof variables !== 'object' || variables === null) {
+      if (typeof variables !== 'object' || variables === null || Array.isArray(variables)) {
         return { 
           isValid: false, 
           error: 'GraphQL variables must be a JSON object' 

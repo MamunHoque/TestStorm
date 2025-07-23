@@ -284,6 +284,7 @@ describe('ApiTest Model', () => {
     it('should validate TestEndpointRequest', () => {
       const request = {
         url: 'https://api.example.com/test',
+        apiType: 'rest' as const,
         method: 'POST' as const,
         headers: { 'Content-Type': 'application/json' },
         queryParams: { limit: '10' },
