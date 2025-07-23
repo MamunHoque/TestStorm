@@ -2,6 +2,7 @@ import React from 'react';
 import { Monitor, Zap, BarChart3, Settings, Moon, Sun, Computer } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { useUIState } from '../store';
+import { ApiTestPanel } from './ApiTestPanel';
 
 export function Layout() {
   const { activeTab, setActiveTab } = useUIState();
@@ -89,20 +90,7 @@ export function Layout() {
       {/* Main Content */}
       <main className="p-4">
         <div className="glass-card">
-          {activeTab === 'api-test' && (
-            <div className="text-center py-12">
-              <Monitor className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                API Test Panel
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Test individual API endpoints for functional correctness
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                Coming soon in Task 7...
-              </p>
-            </div>
-          )}
+          {activeTab === 'api-test' && <ApiTestPanel />}
 
           {activeTab === 'load-test' && (
             <div className="text-center py-12">

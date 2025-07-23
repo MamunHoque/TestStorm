@@ -41,7 +41,7 @@
   - Add theme support for dark and light modes
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 7. Build API Test Panel component with form handling
+- [*] 7. Build API Test Panel component with form handling
   - Create API test panel with input fields for URL, method, headers, and body
   - Implement authentication section with dropdown for auth types
   - Add form validation using React Hook Form
