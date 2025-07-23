@@ -78,7 +78,7 @@
   - Add checkboxes for keep-alive connections and randomized delays
   - _Requirements: 2.6, 2.7, 2.8, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7_
 
-- [ ] 12. Create authentication and headers management interface
+- [*] 12. Create authentication and headers management interface
   - Build Bearer token input field with secure handling
   - Implement collapsible custom headers panel with key-value rows
   - Add "Add Header" button functionality with dynamic form fields
