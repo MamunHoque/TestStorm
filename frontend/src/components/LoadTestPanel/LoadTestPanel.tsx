@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Play, Square, RotateCcw, Code, Monitor, Zap, Settings } from 'lucide-react';
 import { LoadTestForm } from './LoadTestForm';
 import { PerformanceCharts } from './PerformanceCharts';
+import { LiveMetricsDashboard } from './LiveMetricsDashboard';
 import { LoadTestConfig } from '../../types/loadTest';
 import { useLoadTestState } from '../../store';
 import { useLoadTestWebSocket } from '../../hooks/useLoadTestWebSocket';
@@ -215,75 +216,23 @@ export function LoadTestPanel() {
 
         {/* Right Panel - Real-time Monitoring */}
         <div className="space-y-6">
-          {/* Metrics Overview */}
-          <div className="glass-panel">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Real-time Metrics
-            </h3>
-            
-            {!isRunning && !currentTestId ? (
-              <div className="text-center py-8">
-                <Monitor className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-600 dark:text-gray-400">
-                  Start a load test to see real-time metrics
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {/* Virtual Users */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                      Virtual Users
-                    </span>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">
-                    {metrics?.activeUsers || 0}
-                  </div>
-                </div>
-
-                {/* Response Time */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                      Avg Response
-                    </span>
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <div className="text-2xl font-bold text-green-900 dark:text-green-100 mt-1">
-                    {metrics?.avgResponseTime ? `${Math.round(metrics.avgResponseTime)}ms` : '0ms'}
-                  </div>
-                </div>
-
-                {/* Requests Per Second */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                      Requests/sec
-                    </span>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <div className="text-2xl font-bold text-purple-900 dark:text-purple-100 mt-1">
-                    {metrics?.requestsPerSecond ? Math.round(metrics.requestsPerSecond) : 0}
-                  </div>
-                </div>
-
-                {/* Error Rate */}
-                <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-red-700 dark:text-red-300">
-                      Error Rate
-                    </span>
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <div className="text-2xl font-bold text-red-900 dark:text-red-100 mt-1">
-                    {metrics?.errorRate ? `${(metrics.errorRate * 100).toFixed(1)}%` : '0%'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Live Metrics Dashboard */}
+          <LiveMetricsDashboard
+            metrics={metrics ? {
+              activeUsers: metrics.activeUsers || 0,
+              avgResponseTime: metrics.avgResponseTime || 0,
+              maxLatency: metrics.p99ResponseTime || 0,
+              successRate: (1 - (metrics.errorRate || 0)),
+              totalRequests: metrics.totalRequests || 0,
+              requestsPerSecond: metrics.requestsPerSecond || 0,
+              errorRate: metrics.errorRate || 0,
+              p95ResponseTime: metrics.p95ResponseTime || 0,
+              successfulRequests: metrics.successfulRequests || 0,
+              failedRequests: metrics.failedRequests || 0,
+            } : null}
+            isRunning={isRunning}
+            testDuration={testDuration}
+          />
 
           {/* Performance Charts */}
           <PerformanceCharts 
@@ -291,48 +240,19 @@ export function LoadTestPanel() {
             isRunning={isRunning}
           />
 
-          {/* Test Status */}
-          {(isRunning || currentTestId) && (
+          {/* Error Logs */}
+          {errorLogs.length > 0 && (
             <div className="glass-panel">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Test Status
+                Recent Errors
               </h3>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    status?.status === 'running' 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                      : status?.status === 'completed'
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-                  }`}>
-                    {status?.status || 'idle'}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Duration:</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {testDuration ? `${Math.floor(testDuration / 1000)}s` : '0s'}
-                  </span>
-                </div>
-                
-                {errorLogs.length > 0 && (
-                  <div className="mt-4">
-                    <span className="text-sm text-red-600 dark:text-red-400 font-medium">
-                      Recent Errors ({errorLogs.length}):
-                    </span>
-                    <div className="mt-2 max-h-32 overflow-y-auto space-y-1">
-                      {errorLogs.slice(-3).map((log, index) => (
-                        <div key={index} className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                          {log.message}
-                        </div>
-                      ))}
-                    </div>
+              <div className="max-h-32 overflow-y-auto space-y-2">
+                {errorLogs.slice(-5).map((log, index) => (
+                  <div key={index} className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                    <span className="font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                    <span className="ml-2">{log.message}</span>
                   </div>
-                )}
+                ))}
               </div>
             </div>
           )}
