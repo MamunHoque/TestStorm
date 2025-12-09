@@ -8,6 +8,9 @@ The **API Load Testing & Monitoring SPA** is a comprehensive, production-ready w
 ![Tasks Completed](https://img.shields.io/badge/Tasks-20%2F20%20Completed-success?style=for-the-badge)
 ![Tech Stack](https://img.shields.io/badge/Stack-Full%20Stack%20TypeScript-blue?style=for-the-badge)
 
+### 🔗 Repository
+**GitHub**: [https://github.com/MamunHoque/TestStorm/](https://github.com/MamunHoque/TestStorm/)
+
 ---
 
 ## 🎯 **What This Application Does**
@@ -148,8 +151,8 @@ React 18 + TypeScript
 ### **Quick Start (Automated)**
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd api-load-testing-spa
+git clone https://github.com/MamunHoque/TestStorm.git
+cd TestStorm
 
 # Run automated setup
 ./start-app.sh
@@ -427,6 +430,15 @@ The **API Load Testing & Monitoring SPA** represents a complete, production-read
 - ✅ **Enterprise Deployment**: Scalable and secure architecture
 
 **Start testing your APIs today with professional-grade tools and beautiful, intuitive interfaces!** 🚀
+
+---
+
+## 👨‍💻 Developer
+
+**Mamun Hoque**
+
+- **GitHub**: [@MamunHoque](https://github.com/MamunHoque)
+- **Repository**: [https://github.com/MamunHoque/TestStorm/](https://github.com/MamunHoque/TestStorm/)
 
 ---
 
